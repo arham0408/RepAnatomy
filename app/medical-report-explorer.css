@@ -1,0 +1,861 @@
+/* SehatSetu Medical Report Explorer Stylesheet */
+
+.sehatsetu-panel {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 440px;
+  max-width: calc(100vw - 28px);
+  max-height: calc(100vh - 84px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.85);
+  color: #1e293b;
+  z-index: 45;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .sehatsetu-panel {
+    top: auto;
+    bottom: 74px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: 70vh;
+  }
+}
+
+.sehatsetu-header {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(248, 250, 252, 0.7);
+}
+
+.sehatsetu-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sehatsetu-badge {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sehatsetu-header-title h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sehatsetu-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sehatsetu-lang-select {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  background: #ffffff;
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.sehatsetu-lang-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.sehatsetu-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  background: rgba(241, 245, 249, 0.6);
+  padding: 4px;
+  gap: 4px;
+}
+
+.sehatsetu-tab-btn {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.sehatsetu-tab-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.sehatsetu-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-behavior: smooth;
+}
+
+/* Upload Dropzone */
+.sehatsetu-dropzone {
+  border: 2px dashed rgba(148, 163, 184, 0.7);
+  border-radius: 12px;
+  padding: 20px 14px;
+  text-align: center;
+  background: rgba(248, 250, 252, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sehatsetu-dropzone:hover,
+.sehatsetu-dropzone.dragging {
+  border-color: #2563eb;
+  background: rgba(239, 246, 255, 0.8);
+}
+
+.sehatsetu-dropzone-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sehatsetu-dropzone-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sehatsetu-dropzone-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.sehatsetu-samples-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sehatsetu-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.sehatsetu-sample-chip {
+  text-align: left;
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.15s ease;
+}
+
+.sehatsetu-sample-chip:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Progress bar */
+.sehatsetu-progress-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sehatsetu-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sehatsetu-progress-track {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sehatsetu-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #0284c7);
+  transition: width 0.3s ease;
+}
+
+/* Active Report Bar */
+.sehatsetu-active-report-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(239, 246, 255, 0.8);
+  border: 1px solid rgba(191, 219, 254, 0.8);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.sehatsetu-report-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Viewport Controls Bar */
+.sehatsetu-viewer-toolbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px;
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.sehatsetu-toolbar-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.sehatsetu-toolbar-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.sehatsetu-toolbar-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.sehatsetu-toolbar-btn.highlight-active {
+  background: #fef08a;
+  color: #854d0e;
+  border-color: #ca8a04;
+  box-shadow: 0 0 0 1px #ca8a04;
+  font-weight: 700;
+}
+
+/* Inspected Organ Card (3D click grounded in report) */
+.sehatsetu-inspected-card {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.sehatsetu-inspected-card.has-finding {
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+  box-shadow: 0 4px 16px -2px rgba(245, 158, 11, 0.2);
+}
+
+.sehatsetu-inspected-card.reference {
+  border-color: #93c5fd;
+  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+}
+
+.sehatsetu-inspected-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sehatsetu-inspected-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sehatsetu-inspected-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sehatsetu-inspected-actions button {
+  flex: 1;
+  justify-content: center;
+}
+
+/* Finding Cards */
+.sehatsetu-findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sehatsetu-finding-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.sehatsetu-finding-card:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+}
+
+.sehatsetu-finding-card.active-target {
+  border-color: #2563eb;
+  background: #f8faff;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.sehatsetu-finding-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sehatsetu-finding-term {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: capitalize;
+}
+
+.sehatsetu-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.sehatsetu-status-badge.confirmed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.sehatsetu-status-badge.ruled_out {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.sehatsetu-status-badge.suspected {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.sehatsetu-finding-explanation {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.sehatsetu-finding-evidence {
+  font-size: 11px;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border-left: 3px solid #cbd5e1;
+  font-style: italic;
+}
+
+.sehatsetu-targets-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.sehatsetu-organ-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sehatsetu-organ-pill.verified {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.sehatsetu-organ-pill.condition_associated {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.sehatsetu-organ-pill.unresolved {
+  background: #fff1f2;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
+}
+
+.sehatsetu-finding-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.sehatsetu-focus-btn {
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sehatsetu-focus-btn:hover {
+  background: #1d4ed8;
+}
+
+/* Chat Assistant Panel */
+.sehatsetu-chat-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sehatsetu-chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 88%;
+}
+
+.sehatsetu-chat-msg.user {
+  align-self: flex-end;
+}
+
+.sehatsetu-chat-msg.assistant {
+  align-self: flex-start;
+}
+
+.sehatsetu-msg-bubble {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.sehatsetu-chat-msg.user .sehatsetu-msg-bubble {
+  background: #2563eb;
+  color: #ffffff;
+  border-bottom-right-radius: 2px;
+}
+
+.sehatsetu-chat-msg.assistant .sehatsetu-msg-bubble {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-bottom-left-radius: 2px;
+}
+
+.sehatsetu-msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sehatsetu-audio-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.sehatsetu-audio-btn:hover {
+  color: #2563eb;
+}
+
+.sehatsetu-chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.sehatsetu-chat-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  outline: none;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.sehatsetu-chat-input:focus {
+  border-color: #2563eb;
+}
+
+.sehatsetu-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.sehatsetu-icon-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.sehatsetu-icon-btn.listening {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #f87171;
+  animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.sehatsetu-send-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.sehatsetu-send-btn:hover {
+  background: #1d4ed8;
+}
+
+/* Educational Disclaimer Banner */
+.sehatsetu-disclaimer {
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #64748b;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+/* 3D Organ Context Banner in Chat */
+.sehatsetu-organ-context-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #92400e;
+}
+
+.sehatsetu-context-pill-btn {
+  padding: 3px 8px;
+  background: #f59e0b;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.sehatsetu-context-pill-btn:hover {
+  background: #d97706;
+}
+
+/* Scoped contextual chat (per finding card / per structure panel) */
+.sehatsetu-scoped-chat {
+  margin-top: 6px;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sehatsetu-scoped-chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.sehatsetu-scoped-chat-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sehatsetu-scoped-collapse {
+  border: none;
+  background: transparent;
+  color: #1e40af;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+}
+
+.sehatsetu-scoped-collapse:hover {
+  background: #dbeafe;
+}
+
+.sehatsetu-scoped-lang {
+  font-size: 10px;
+  padding: 3px 4px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #334155;
+  align-self: flex-start;
+}
+
+.sehatsetu-scoped-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.sehatsetu-scoped-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.sehatsetu-scoped-msg.user {
+  flex-direction: row-reverse;
+}
+
+.sehatsetu-scoped-text {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.45;
+  padding: 4px 7px;
+  border-radius: 7px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  white-space: pre-wrap;
+  max-width: 92%;
+}
+
+.sehatsetu-scoped-msg.user .sehatsetu-scoped-text {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
+.sehatsetu-scoped-speak {
+  border: none;
+  background: transparent;
+  color: #1d4ed8;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.sehatsetu-scoped-speak:hover {
+  background: #dbeafe;
+}
+
+.sehatsetu-scoped-input-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.sehatsetu-scoped-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 10.5px;
+  padding: 5px 7px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.sehatsetu-scoped-input:focus {
+  border-color: #2563eb;
+}
+
+.sehatsetu-scoped-mic,
+.sehatsetu-scoped-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sehatsetu-scoped-mic:hover,
+.sehatsetu-scoped-send:hover {
+  background: #eff6ff;
+}
+
+.sehatsetu-scoped-mic.listening {
+  border-color: #dc2626;
+  color: #dc2626;
+  animation: pulse-red 1.2s infinite;
+}
+
+.sehatsetu-scoped-send:disabled,
+.sehatsetu-scoped-mic:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.sehatsetu-finding-ask.sehatsetu-scoped-chat,
+.sehatsetu-finding-ask.sehatsetu-scoped-chat-launcher {
+  margin-top: 0;
+}
+
+/* Findings that have no verified 3D target in the loaded model */
+.sehatsetu-unavailable-note {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 10px;
+  line-height: 1.45;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 7px 9px;
+}
