@@ -432,3 +432,10 @@ body:has(.focus-mode) .detail-sheet { opacity: 0; pointer-events: none; visibili
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+/* Compact embedded atlas retains native camera controls and selection rendering. */
+.fitness-embedded .redesigned-studio{--stage-left:8px;--stage-right:8px;--stage-top:8px;--stage-bottom:8px;min-height:0}
+.fitness-embedded :is(.workspace-sidebar,.sidebar-surface,.guide-rail,.canvas-heading,.canvas-hint,.bottom-dock,.studio-footer,.identity,.top-actions,.detail-panel,.inspector,.turn-pill,.view-notice,.model-switch,.workspace-guide,.about-sheet){display:none!important}
+.fitness-embedded .redesigned-studio .viewer-controls{left:12px;top:14px;max-height:calc(100% - 28px)}
+.fitness-embedded .redesigned-studio .loading{left:50%;min-width:180px;max-width:85%;font-size:11px}
+
+.fitness-embedded :is(.discovery-rail,.detail-sheet,.sheet-overlay,.view-dock,.mobile-nav){display:none!important}

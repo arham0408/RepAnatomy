@@ -23,7 +23,7 @@ test.describe('expanding anatomy dock', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.setViewportSize({ width: 1366, height: 768 });
     await page.mouse.move(800, 300);
-    await page.goto('./');
+    await page.goto('./?atlas=1');
     await ready(page);
     const dock = page.locator('.bottom-dock');
     const trigger = page.getByRole('button', { name: 'Explode anatomy controls', exact: true });
@@ -106,7 +106,7 @@ test('sidebar opens on hover and body systems uses a working dropdown', async ({
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 1366, height: 768 });
   await page.mouse.move(900, 450);
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await ready(page);
   const sidebar = page.getByRole('complementary', { name: 'Workspace sidebar', exact: true });
   await expect(sidebar).toHaveAttribute('data-expanded', 'false');
@@ -172,7 +172,7 @@ test('atlas shell controls change the real camera and retain both models', async
   page.on('pageerror', error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await ready(page);
   await expect(page.locator('.canvas-caption')).toHaveCount(0);
   await expect(page.locator('.model-tabs')).toHaveCount(0);
@@ -227,7 +227,7 @@ test('atlas shell controls change the real camera and retain both models', async
 
 test('atlas shell remains usable on phone, tablet and short viewports', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await ready(page);
   for (const [width, height] of [[375, 812], [320, 568], [844, 390], [900, 900], [1280, 600]]) {
     await page.setViewportSize({ width, height });

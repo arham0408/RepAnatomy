@@ -87,6 +87,7 @@ app = FastAPI(
 )
 
 from backend.fitness import router as fitness_router
+from backend import fitness_coach  # Registers coaching routes on the shared router.
 app.include_router(fitness_router)
 
 # Configure CORS

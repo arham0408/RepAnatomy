@@ -1,6 +1,6 @@
 # RepAnatomy
 
-**Every rep. A little clearer.**
+**See your movement. Understand your body.**
 
 RepAnatomy connects exercise practice with an interactive 3D anatomy atlas. Gym Studio combines browser pose estimation, substantive **OpenCV 5** frame analysis, rep tracking, expected muscle targets and a coaching controller whose decisions change when the visual evidence changes.
 
@@ -31,25 +31,31 @@ Terminal 2:
 npm run dev
 ```
 
-Open **[Gym Studio](http://localhost:3016/?gym=1)**. The [anatomy atlas](http://localhost:3016/) and [report companion](http://localhost:3016/?demo=1) remain available. No paid AI key is needed for fitness coaching or the synthetic demonstration. For macOS/Linux, use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
+Open **[Gym Studio](http://localhost:3016/?gym=1)**. The [standalone anatomy atlas](http://localhost:3016/?atlas=1) and [report companion](http://localhost:3016/?demo=1) remain available. No paid AI key is needed for fitness coaching or the synthetic demonstration. For macOS/Linux, use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
 
 `prepare:pose` downloads a versioned pose model, checks its pinned SHA-256 and copies the matching WASM runtime into `public/pose`. Camera inference then uses local assets. The frontend development server proxies `/api` and `/mcp` to the backend. Use `REPANATOMY_API_TARGET` to select a different backend. [Detailed setup and use guide](docs/opencv/RUN_AND_USE.md).
 
-## Use Gym Studio
+## Train + anatomy
 
-1. Select **bodyweight squat, push-up, biceps curl, shoulder press or forward lunge**.
-2. Choose **Try synthetic demo** to check the complete flow without a camera. The engineering demonstration uses generated observations; it is not human accuracy evidence.
-3. For your own practice, enable the frame processing consent checkbox, then choose **Use camera** or **Open video**. Use a side view with one person in frame. Camera access requires localhost or HTTPS.
-4. Watch rep cycles, joint visibility, approximate joint angles and actionable cues. Poor lighting, blur, occlusion or tracking discontinuities pause counting. A completed cycle is not a safety certification.
-5. Review expected primary and supporting muscle roles. **Meet the muscle** opens the relevant structure in the 3D atlas. Camera video cannot measure muscle activation or establish that another muscle is inactive.
-6. Stop capture and open **My practice plan**. Choose food preferences, exclusions and practice days. Visual observations select either a technique-review draft or a conservative practice draft. Review the draft to enable export. Medical needs and pain redirect to human review.
-7. Inspect **Vision evidence**, export the decision trace or delete the session. A reported pain/dizziness stop is latched for that session.
+1. Tell the coach which muscles you want to train, or choose a supported exercise: squat, push-up, curl, shoulder press or lunge. **Recognize my exercise** uses repeated movement geometry and abstains when evidence is insufficient. It is not a trained, validated exercise classifier.
+2. Enable frame processing and choose **Use camera** or **Open video**. Use one person, a stable side view, and a comfortable, controlled pace. The camera and interactive anatomy stay side by side. The synthetic demo is labelled and excluded from your daily totals.
+3. Follow rep counts, visible-joint form cues, eight bilateral joint angles, the range chart, and per-rep duration/ranges. Tap an expected muscle target to highlight it in the atlas. No muscle activation or inactivity is measured.
+4. Turn **Voice on** for spoken cues and replies. Tap the microphone to ask a question; say “stop session” to stop capture. Browser speech recognition may use its provider's speech service and may be unavailable; typing is always available. Set completion automatically requests a coaching review.
+5. Open **My practice** for today's device-local camera/video totals, coaching, a weekly exercise draft and food preferences/exclusions. Review before exporting. Expand **Session measurements & diagnostics** to export bounded timestamped angle arrays or delete the active session.
+
+## Groq coaching configuration
+
+Copy `backend/.env.example` to `backend/.env`, add `GROQ_API_KEY`, and set `GROQ_MODEL` to an available model ID. Restart the Python backend. The existing default is `openai/gpt-oss-120b`; no key is shipped. `/api/fitness/coach/status` reports configuration without exposing secrets. A configured key is **not** proof of a successful provider connection.
+
+**DeepSeek on Groq:** Groq's [deprecation documentation](https://console.groq.com/docs/deprecations) lists `deepseek-r1-distill-llama-70b` as retired on October 2, 2025. Do not use that ID expecting a working endpoint. The model remains configurable so you can use a currently available model in your account. Provider errors are shown and fall back to clearly labelled local coaching; no silent model substitution occurs in the fitness coach.
+
+Only questions, recent valid/invalid angle samples, rep summaries, and planning preferences go to the configured LLM. Raw images are not sent to it. The LLM explains observations; it cannot change counts, exercise recognition or the latched pain stop. Optional `FITNESS_COACH_API_KEY`, `FITNESS_COACH_BASE_URL` and `FITNESS_COACH_MODEL` override the shared Groq configuration for another compatible provider.
 
 ## What runs in OpenCV 5
 
 The server decodes JPEG frames, rescales and converts images to grayscale, measures Laplacian sharpness and exposure, tracks observations with pyramidal Lucas–Kanade optical flow, and projects normalized pose observations into pixel geometry. These results gate form cues and rep counting, change capture cadence, and influence the later practice draft.
 
-Browser pose inference runs in a worker using a pinned MediaPipe Pose Landmarker model. A BODY_25 observation import adapter is also available. Exercise selection is explicit; heuristic pose suggestions are not a validated automatic exercise classifier. No pretrained classifier accuracy from other applications is claimed.
+Browser pose inference runs in a worker using a pinned MediaPipe Pose Landmarker model. A BODY_25 observation import adapter is also available. Exercise selection can be manual or automatic through a temporal geometry recognizer, with five agreeing observations, motion-range and elapsed-time gates. Recognition locks for the session and never switches silently between exercises. This recognizer has not been validated on a human dataset. No pretrained classifier accuracy from other applications is claimed.
 
 ```mermaid
 flowchart LR

@@ -19,6 +19,7 @@ import cv2
 import numpy as np
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
+from backend.movement import joint_angles, recognize, recognition_usable, update_recognition, angle_ranges
 
 if cv2.__version__.split(".")[0] != "5":
     raise RuntimeError("Gym Studio requires OpenCV 5. Install backend/requirements.txt.")
@@ -46,7 +47,7 @@ class Landmark(Input):
 
 
 class SessionRequest(Input):
-    exercise: ExerciseId
+    exercise: ExerciseId | Literal["auto"]
     source: Literal["camera", "video", "synthetic", "body25"]
 
 
@@ -87,6 +88,16 @@ class Workout:
     events: list = field(default_factory=list)
     last_action: str = ""
     vision_action: str = "reframe"
+    auto: bool = False
+    recognized: bool = False
+    recognition: dict = field(default_factory=lambda: {"status": "observing", "candidate": None, "agreement": 0})
+    recognition_window: list = field(default_factory=list)
+    samples: list = field(default_factory=list)
+    rep_records: list = field(default_factory=list)
+    coach_history: list = field(default_factory=list)
+    coach_busy: bool = False
+    last_coach: float = 0
+
 
 
 workouts: dict[str, Workout] = {}
@@ -220,10 +231,12 @@ def summary(s):
     all_muscles = sorted({muscle for exercise in EXERCISES for muscle in exercise["primary"]})
     return {"exercise": s.exercise, "source": s.source, "reps": s.reps, "accepted_reps": s.accepted,
             "review_reps": s.rejected, "phase": s.phase, "frames": s.frames, "stopped": s.stopped,
-            "expected_targets": CATALOG[s.exercise]["primary"],
+            "expected_targets": CATALOG[s.exercise]["primary"] if not s.auto or s.recognized else [],
             "not_primary_targets": [m for m in all_muscles if m not in emphasized],
             "muscle_note": "Expected anatomical roles, not measured activation. A camera cannot establish which muscle is working or inactive.",
-            "trace": s.events, "opencv_version": cv2.__version__}
+            "trace": s.events, "opencv_version": cv2.__version__,
+            "recognition": {**s.recognition, "locked": s.recognized, "mode": "auto" if s.auto else "selected"},
+            "angle_ranges": angle_ranges(s.samples), "rep_records": s.rep_records[-20:]}
 
 
 @router.get("/capabilities")
@@ -247,7 +260,7 @@ def create_session(body: SessionRequest):
         if len(workouts) >= MAX_SESSIONS:
             raise HTTPException(429, "Demo capacity reached. Delete an old session or retry later.")
         token = secrets.token_urlsafe(24)
-        workouts[token] = Workout(body.exercise, body.source)
+        workouts[token] = Workout("squat" if body.exercise == "auto" else body.exercise, body.source, auto=body.exercise == "auto")
     return {"session_id": token, "expires_in": TTL}
 
 
@@ -288,6 +301,14 @@ def analyze_frame(token: str, frame: FrameRequest):
         gray = cv2.cvtColor(cv2.resize(image, (320, 240)), cv2.COLOR_BGR2GRAY)
         sharpness = float(cv2.Laplacian(gray, cv2.CV_64F).var())
         exposure = float(cv2.mean(gray)[0])
+        angles = joint_angles(landmarks, w, h)
+        detection_quality = (35 <= exposure <= 235 and sharpness >= 8 and not s.stopped and not frame.pain
+                             and recognition_usable(landmarks, w, h)
+                             and not (s.last_timestamp >= 0 and frame.timestamp_ms - s.last_timestamp > 2000))
+        if not detection_quality:
+            s.recognition_window.clear()
+        elif not (s.auto and s.recognized):
+            update_recognition(s, recognize(landmarks, angles, w, h), angles, frame.timestamp_ms)
         metrics, points = (measure(landmarks, w, h, s.exercise) if landmarks else ({}, None))
         motion_error = None
         if points is not None and s.previous_points is not None and points.shape == s.previous_points.shape:
@@ -320,11 +341,17 @@ def analyze_frame(token: str, frame: FrameRequest):
             action, reason = "reacquire", "Tracking changed abruptly. Hold still to reacquire your pose."
         elif gap:
             action, reason = "reacquire", "The video stream paused. Return to the start position."
+        elif s.auto and not s.recognized:
+            action, reason = "identify_exercise", "Make a few slow movements in side view, or select your exercise if recognition is uncertain."
         elif metrics["mismatch"]:
             action, reason = "confirm_exercise", "Pose differs from the selected movement. Check your exercise selection."
         elif metrics["faults"]:
             action, reason = "correct_form", metrics["faults"][0]
             s.faults += 1
+        sample = {"timestamp_ms": frame.timestamp_ms, "angles": angles,
+                  "valid": action in ("coach", "correct_form"), "action": action, "phase": s.phase}
+        s.samples.append(sample)
+        s.samples = s.samples[-600:]
         if action not in ("coach", "correct_form"):
             s.phase, s.cycle_bad = "seek_start", False
         else:
@@ -341,6 +368,11 @@ def analyze_frame(token: str, frame: FrameRequest):
                 duration = (frame.timestamp_ms - s.cycle_start) / 1000
                 if .7 <= duration <= 12:
                     s.reps += 1
+                    cycle_samples = [x for x in s.samples if x["timestamp_ms"] >= s.cycle_start]
+                    s.rep_records.append({"rep": s.reps, "start_ms": s.cycle_start, "end_ms": frame.timestamp_ms,
+                                          "duration_s": round(duration, 2), "review": s.cycle_bad,
+                                          "angle_ranges": angle_ranges(cycle_samples)})
+                    s.rep_records = s.rep_records[-100:]
                     if s.cycle_bad:
                         s.rejected += 1
                         action, reason = "review_rep", "Movement completed with a form cue. Review before repeating."
@@ -354,7 +386,7 @@ def analyze_frame(token: str, frame: FrameRequest):
                 s.phase = "seek_start"
         event(s, action, reason, frame.timestamp_ms)
         s.vision_action = action
-        return {**summary(s), "action": action, "message": reason, "metrics": metrics,
+        return {**summary(s), "action": action, "message": reason, "metrics": {**metrics, "angles": angles},
                 "quality": {"sharpness": round(sharpness, 2), "exposure": round(exposure, 2),
                             "tracking_error_px": round(motion_error, 2) if motion_error is not None else None},
                 "latency_ms": round((time.perf_counter() - started) * 1000, 2),
@@ -368,6 +400,8 @@ def plan(token: str, body: PlanRequest):
         if s.stopped or body.needs_clinical_review:
             return {"status": "human_review", "reason": "Ask a qualified clinician or dietitian for an appropriate plan before continuing.",
                     "schedule": [], "meals": [], "requires_approval": True}
+        if s.auto and not s.recognized:
+            raise HTTPException(409, "Choose an exercise or finish recognition before creating a practice draft.")
         if s.frames < 3:
             raise HTTPException(409, "Analyze at least three frames before creating an evidence-based draft.")
         last = s.vision_action
@@ -396,3 +430,11 @@ def plan(token: str, body: PlanRequest):
                 "meals": meals, "requires_approval": True,
                 "nutrition_note": "Meal ideas only. No calorie prescription or guarantee of allergen safety. Check labels and cross-contact; use a dietitian for medical needs.",
                 "nutrition_source": "https://nutritionsource.hsph.harvard.edu/healthy-eating-plate/"}
+
+
+@router.get("/sessions/{token}/telemetry")
+def telemetry(token: str):
+    with lock:
+        s = get_workout(token)
+        return {**summary(s), "samples": s.samples, "rep_records": s.rep_records,
+                "sample_limit": 600, "rep_record_limit": 100, "angles_unit": "degrees", "geometry": "2D image projection"}

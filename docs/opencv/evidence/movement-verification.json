@@ -1,0 +1,43 @@
+{
+  "project": "RepAnatomy",
+  "date": "2026-10-27",
+  "scope": "Integrated movement workspace update",
+  "checks": {
+    "typescript": "passed",
+    "lint": "passed",
+    "javascript": {
+      "existing_suite_passed": 126,
+      "new_muscle_link_regression_passed": 1
+    },
+    "python_fitness_movement_mcp": {
+      "passed": 39,
+      "failed": 0
+    },
+    "browser_development": {
+      "passed": 12,
+      "failed": 0
+    },
+    "browser_production": {
+      "passed": 3,
+      "failed": 0,
+      "scenarios": [
+        "actual local pose model and WASM startup",
+        "embedded atlas muscle selection",
+        "goal and completed-set coaching"
+      ]
+    },
+    "root_build_and_pwa": "passed",
+    "production_web_api_mcp_smoke": "passed"
+  },
+  "recognition_evidence": "Synthetic fixtures for five supported movements; stationary, occluded, dark, frontal and interrupted observations abstain. No real-world accuracy percentage established.",
+  "voice_evidence": "Mock browser recognition and speech synthesis verify transcript, reply and stop-command wiring. Physical microphone/speaker validation pending.",
+  "provider_evidence": "Real local endpoints exercised without a key; upstream request contract, angle-only payload, rejected-model/error fallback and stop override tested with mocks. No authenticated provider call verified.",
+  "pending": [
+    "API key and an available Groq model ID",
+    "Consented human movement/form benchmark",
+    "Human microphone and speaker check in the presentation browser",
+    "AWS deployment and presentation video"
+  ],
+  "pushed_this_update": false,
+  "deployed": false
+}

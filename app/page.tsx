@@ -69,7 +69,7 @@ import {
   type SavedView,
 } from "./saved-views";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { buildSearchConcepts, matchesAnatomySearch, type SearchConcept } from "./anatomy-search";
+import { buildSearchConcepts, findMuscleConcept, matchesAnatomySearch, type SearchConcept } from "./anatomy-search";
 import { partIsVisible } from "./part-visibility";
 import { clearStructureOverrides } from "./structure-layers";
 import { readRecentStructures, rememberStructure, recentStructuresKey } from "./recent-structures";
@@ -378,6 +378,7 @@ export default function Home() {
     setState((current) => ({
       ...current,
       selected: concept.elements,
+      ...(new URLSearchParams(location.search).has("embedded") ? {visible: ["skeletal", "muscular"] as SystemId[]} : {}),
       isolate: false,
       rotate: false,
       focus: (current.focus ?? 0) + 1,
@@ -401,10 +402,22 @@ export default function Home() {
     const muscle = new URLSearchParams(location.search).get("fitness-muscle");
     if (!muscle || !atlas || progress !== 100 || muscleLinkHandled.current) return;
     muscleLinkHandled.current = true;
-    const concept = concepts.find(item => item.name.toLowerCase() === muscle.toLowerCase())
-      ?? concepts.find(item => item.name.toLowerCase().includes(muscle.toLowerCase()));
+    const concept = findMuscleConcept(atlas, concepts, muscle);
     if (concept) choose(concept);
     else { setQuery(muscle); setPanel("search"); }
+  }, [atlas, concepts, progress]);
+  useEffect(() => {
+    if (!new URLSearchParams(location.search).has('embedded') || !atlas || progress !== 100) return;
+    const receive = (event: MessageEvent) => {
+      if (event.origin !== location.origin || event.source !== window.parent || event.data?.type !== 'repanatomy:muscle' || typeof event.data.query !== 'string') return;
+      const name = event.data.query.toLowerCase().slice(0, 100);
+      if (!name) { setState(current => ({...current, selected: [], focus: 0})); setDetails(false); return; }
+      const concept = findMuscleConcept(atlas, concepts, name);
+      if (concept) choose(concept);
+    };
+    window.addEventListener('message', receive);
+    window.parent.postMessage({type:'repanatomy:atlas-ready'}, location.origin);
+    return () => window.removeEventListener('message', receive);
   }, [atlas, concepts, progress]);
   const setLayers = (visible: SystemId[]) => {
     setDetails(false);

@@ -89,10 +89,12 @@ export default function AnatomyScene({
     const requestFrame = frames.request;
     wake.current = requestFrame;
     const abort = new AbortController();
+    const embedded = new URLSearchParams(location.search).has('embedded');
+    const pixelRatio = () => embedded ? Math.min(1, Math.sqrt(180000 / Math.max(1, el.clientWidth * el.clientHeight))) : scenePixelRatio(el.clientWidth, el.clientHeight, devicePixelRatio);
     let renderer: T.WebGLRenderer;
     try {
       renderer = new T.WebGLRenderer({
-        antialias: true,
+        antialias: !embedded,
         alpha: false,
         powerPreference: "default",
       });
@@ -104,7 +106,7 @@ export default function AnatomyScene({
       );
       return;
     }
-    renderer.setPixelRatio(scenePixelRatio(el.clientWidth, el.clientHeight, devicePixelRatio));
+    renderer.setPixelRatio(pixelRatio());
     renderer.setClearColor(getComputedStyle(el).getPropertyValue("--background").trim());
     changeBackground.current = (color) => {
       renderer.setClearColor(color);
@@ -124,7 +126,7 @@ export default function AnatomyScene({
       camera = new T.PerspectiveCamera(34, 1, 0.005, 100),
       controls = new OrbitControls(camera, renderer.domElement);
     const releaseAnchoredPan = anchorPan(controls, camera, renderer.domElement);
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const reducedMotion = embedded ? {matches: true} : window.matchMedia("(prefers-reduced-motion: reduce)");
     let cameraTransition: {
       start: number;
       position: T.Vector3;
@@ -525,7 +527,7 @@ export default function AnatomyScene({
       lastSelectionFrame = "";
       lastState = null;
       renderer.setPixelRatio(
-        scenePixelRatio(el.clientWidth, el.clientHeight, devicePixelRatio),
+        pixelRatio(),
       );
       camera.aspect = el.clientWidth / el.clientHeight;
       camera.updateProjectionMatrix();

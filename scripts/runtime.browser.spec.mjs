@@ -65,7 +65,7 @@ async function assertIdle(page) {
 test('model switching releases old geometry and document listeners', async ({ page, context, browserName }, testInfo) => {
   test.skip(browserName !== 'chromium', 'Heap and document-listener checks require Chromium CDP.');
   await page.addInitScript(trackRendering);
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await ready(page);
   const cdp = await context.newCDPSession(page);
   const samples = [];
@@ -96,7 +96,7 @@ test('model switching releases old geometry and document listeners', async ({ pa
 
 test('idle, hidden and empty scenes stop drawing and wake on interaction', async ({ page }) => {
   await page.addInitScript(trackRendering);
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await ready(page);
   await assertIdle(page);
   await page.getByRole('button', { name: 'Rotate body', exact: true }).click();
@@ -123,7 +123,7 @@ test('a failed chunk frees the partial scene and another model remains usable', 
     await new Promise(resolve => setTimeout(resolve, 300));
     await route.fulfill({ status: 503, body: 'Unavailable for this regression test' });
   });
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await expect(page.getByRole('alert')).toContainText('could not be loaded');
   await expect(page.locator('canvas')).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.__renderAudit.contexts.every(c => c.lost))).toBe(true);
@@ -133,7 +133,7 @@ test('a failed chunk frees the partial scene and another model remains usable', 
 });
 
 test('a lost WebGL context releases the scene and reload recovers', async ({ page }) => {
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await ready(page);
   await page.evaluate(() => document.querySelector('canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());
   await expect(page.getByRole('alert')).toContainText('paused by your device');
@@ -144,7 +144,7 @@ test('a lost WebGL context releases the scene and reload recovers', async ({ pag
 
 test('Locate releases individual GPU buffers when the selection closes', async ({ page }) => {
   await page.addInitScript(trackRendering);
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await ready(page);
   const buffers = () => page.evaluate(() => window.__renderAudit.contexts.at(-1).buffers);
   const baseline = await buffers();
@@ -165,7 +165,7 @@ test('phone and desktop search, inspection, layers and pixel budget remain usabl
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await ready(page);
   for (const [width, height] of [[320, 568], [390, 844], [844, 390], [1280, 900], [3840, 2160]]) {
     await page.setViewportSize({ width, height });
@@ -201,7 +201,7 @@ test('WebGL startup failure leaves accessible recovery controls', async ({ page 
       return args[0] === 'webgl2' ? null : getContext.apply(this, args);
     };
   });
-  await page.goto('./');
+  await page.goto('./?atlas=1');
   await expect(page.getByRole('alert')).toContainText('could not start the 3D viewer');
   await expect(page.locator('canvas')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Reload viewer', exact: true })).toBeEnabled();
@@ -221,7 +221,7 @@ test('both saved models reopen when the origin server is unavailable', async ({ 
   const context = await browser.newContext({ ...contextOptions, serviceWorkers: 'allow', baseURL });
   try {
     const page = await context.newPage();
-    await page.goto('./');
+    await page.goto('./?atlas=1');
     await ready(page);
     await page.getByRole('button', { name: 'Sources and credits', exact: true }).click();
     await expect(page.locator('.pwa-offline')).toContainText('Ready offline', { timeout: 90_000 });

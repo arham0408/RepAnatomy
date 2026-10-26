@@ -1,3 +1,7 @@
+# Current integrated workspace verification
+
+The latest camera + anatomy + coach update is recorded in [movement implementation notes](MOVEMENT_WORKSPACE.md) and [machine-readable evidence](evidence/movement-verification.json). It adds temporal exercise recognition, bilateral angle history, per-rep summaries, voice interaction, Groq coaching contracts and device-local daily history. Earlier results below describe the previous interface unless explicitly repeated in the new evidence.
+
 # RepAnatomy — local verification record
 
 Prepared October 27, 2026 (Asia/Kolkata). Source was modified locally only. Existing uncommitted anatomy/UI work was preserved; nothing was committed, pushed, deployed or submitted.

@@ -1,3 +1,9 @@
+# RepAnatomy: integrated movement workspace
+
+The current main interface is **Train + anatomy** and **My practice**. See the root [README](../../README.md#train--anatomy) for the updated walkthrough and [movement implementation notes](MOVEMENT_WORKSPACE.md) for evaluation and API details. The separate atlas is at `?atlas=1`; the report companion is retained at `?demo=1` for compatibility.
+
+The setup commands below remain applicable. Earlier references to a separate Vision evidence tab now mean **My practice → Session measurements & diagnostics**.
+
 # RepAnatomy — run and use
 
 ## Environment

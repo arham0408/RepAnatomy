@@ -9,6 +9,15 @@ export interface SearchConcept extends Concept {
   };
 }
 
+// Muscle links must not select similarly named arteries or nerves (e.g. deltoid branch).
+export function findMuscleConcept(atlas: Atlas, concepts: SearchConcept[], query: string): SearchConcept | undefined {
+  const name = query.toLowerCase();
+  const muscles = new Set(atlas.parts.filter(part => part.system === 'muscular').map(part => part.id));
+  const matches = concepts.filter(item => item.name.toLowerCase().includes(name) && item.elements.length > 0 && item.elements.every(id => muscles.has(id)));
+  return matches.find(item => item.name.toLowerCase() === name)
+    ?? matches.sort((a,b) => b.elements.length - a.elements.length)[0];
+}
+
 interface MuscleGroup {
   id: string;
   name: string;
