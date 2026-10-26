@@ -28,7 +28,7 @@ test("offline answers quote only the current report and preserve negative findin
   await assert.rejects(analyzeReport({ text: "", filename: "empty.txt" }, maleAtlas), /No readable report text/);
 });
 
-test("SehatSetu: resolves exact verified organ concepts in male and female atlases", () => {
+test("RepAnatomy: resolves exact verified organ concepts in male and female atlases", () => {
   const gb = resolveAnatomyTarget("gallbladder", maleAtlas);
   assert.ok(gb, "Gallbladder should resolve");
   assert.equal(gb.availableInModel, true);
@@ -45,7 +45,7 @@ test("SehatSetu: resolves exact verified organ concepts in male and female atlas
   assert.equal(kidney.availableInModel, true);
 });
 
-test("SehatSetu: resolves condition-associated anatomy via verified registry", () => {
+test("RepAnatomy: resolves condition-associated anatomy via verified registry", () => {
   const cholelith = resolveAnatomyTarget("cholelithiasis", maleAtlas, { isCondition: true });
   assert.ok(cholelith, "Cholelithiasis should map to gallbladder");
   assert.equal(cholelith.name.toLowerCase(), "gallbladder");
@@ -58,7 +58,7 @@ test("SehatSetu: resolves condition-associated anatomy via verified registry", (
   assert.equal(appendicitis.availableInModel, true);
 });
 
-test("SehatSetu: handles sex-specific anatomy and flags model availability accurately", () => {
+test("RepAnatomy: handles sex-specific anatomy and flags model availability accurately", () => {
   // Prostate should be available in male atlas, but not female
   const prostateMale = resolveAnatomyTarget("prostate", maleAtlas);
   assert.ok(prostateMale);
@@ -75,7 +75,7 @@ test("SehatSetu: handles sex-specific anatomy and flags model availability accur
   assert.equal(uterusMale.relationshipType, "unresolved");
 });
 
-test("SehatSetu: preserves medical semantics (negation, laterality, certainty, measurements)", () => {
+test("RepAnatomy: preserves medical semantics (negation, laterality, certainty, measurements)", () => {
   const reportText = `
 ULTRASOUND ABDOMEN:
 Single 12 mm calculus noted in the gallbladder with posterior acoustic shadowing (cholelithiasis).
@@ -99,7 +99,7 @@ Left kidney is normal. No renal calculus or hydronephrosis in either kidney.
   }
 });
 
-test("SehatSetu: supports all 8 Indian languages with complete UI localization dictionaries", () => {
+test("RepAnatomy: supports all 8 Indian languages with complete UI localization dictionaries", () => {
   const expectedCodes = ["en", "hi", "bn", "te", "mr", "ta", "gu", "kn"];
   assert.equal(SUPPORTED_LANGUAGES.length, 8);
 
@@ -116,7 +116,7 @@ test("SehatSetu: supports all 8 Indian languages with complete UI localization d
   }
 });
 
-test("SehatSetu: MedicalAnatomyController captures baseline and restores state cleanly", () => {
+test("RepAnatomy: MedicalAnatomyController captures baseline and restores state cleanly", () => {
   const controller = new MedicalAnatomyController();
   const initialSceneState = {
     selected: ["FJ2564"],
@@ -162,7 +162,7 @@ test("SehatSetu: MedicalAnatomyController captures baseline and restores state c
   assert.equal(restored.isolate, false);
 });
 
-test("SehatSetu: deduplicates multiple findings targeting the same organ cleanly", () => {
+test("RepAnatomy: deduplicates multiple findings targeting the same organ cleanly", () => {
   const duplicateFindings = [
     {
       findingId: "f-1",
@@ -229,7 +229,7 @@ test("SehatSetu: deduplicates multiple findings targeting the same organ cleanly
   assert.ok(deduplicated[0].observation.includes("Gallbladder wall is normal"), "Secondary finding observation should be preserved in merged details");
 });
 
-test("SehatSetu: resolves response language per message (explicit > detected > preferred)", () => {
+test("RepAnatomy: resolves response language per message (explicit > detected > preferred)", () => {
   // 1. Explicit per-message request wins even with an English preference.
   assert.equal(explicitLanguageRequest("Answer in Hindi please"), "hi");
   assert.equal(explicitLanguageRequest("Explain in Tamil"), "ta");
@@ -256,7 +256,7 @@ test("SehatSetu: resolves response language per message (explicit > detected > p
   assert.equal(resolveResponseLanguage("What does my report say about the liver?", "en"), "en");
 });
 
-test("SehatSetu: splits findings by actual 3D availability per loaded atlas", () => {
+test("RepAnatomy: splits findings by actual 3D availability per loaded atlas", () => {
   // A female-model report on the male atlas: uterus findings lose their mesh
   // mapping and must be excluded from the linked card list, not fabricated.
   const findings = [

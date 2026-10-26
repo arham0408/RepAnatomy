@@ -1,10 +1,14 @@
-# SehatSetu review pack
+# Legacy report-companion documentation
+
+This directory documents the retained report and voice workflow from an earlier competition scope. For the current RepAnatomy OpenCV 5/AWS project, use [the OpenCV technical report](../opencv/TECHNICAL_REPORT.md), [current submission audit](../opencv/SUBMISSION_CHECKLIST.md), and [current verification](../opencv/VERIFICATION.md). Historical screenshots and verification records here do not establish the fitness extension's capabilities or current competition eligibility.
+
+# RepAnatomy review pack
 
 **Alexa+ primary-track prototype: a voice-first report companion with verified 3D anatomy and a real Streamable HTTP MCP server.**
 
 [Watch the team demo](https://www.youtube.com/watch?v=teRzrT49HVo) · [Project README](../../README.md) · [Local demo](http://localhost:3016/?demo=1)
 
-The local link works after starting the two services on your own computer. The video page resolves to the expected SehatSetu title. Automated playback encountered YouTube's bot check; footage and runtime need manual inspection. The runnable browser/MCP workflow has been verified independently.
+The local link works after starting the two services on your own computer. The video page resolves to the expected RepAnatomy title. Automated playback encountered YouTube's bot check; footage and runtime need manual inspection. The runnable browser/MCP workflow has been verified independently.
 
 ## Choose a review path
 

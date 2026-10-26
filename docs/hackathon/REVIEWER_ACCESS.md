@@ -1,6 +1,6 @@
 # GitHub reviewer-access check
 
-Repository checked: **[cavemansatyn-design/SehatSetu](https://github.com/cavemansatyn-design/SehatSetu)**. Visibility: **private**. This is a point-in-time read-only check; repository access can change.
+Repository checked: **[cavemansatyn-design/RepAnatomy](.)**. Visibility: **private**. This is a point-in-time read-only check; repository access can change.
 
 | Required reviewer | Confirmed current repository access | Pending invitation |
 | --- | --- | --- |

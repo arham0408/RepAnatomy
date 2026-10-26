@@ -28,9 +28,9 @@
 .voice-activity code { overflow-wrap: anywhere; }
 .voice-footnote { margin-top: 18px !important; }
 .companion-page { max-width: 620px; margin: 0 auto; padding: 35px 20px; height: 100dvh; overflow-y: auto; box-sizing: border-box; background: #f3f7f5; }
-.sehatsetu-tabs { overflow-x: auto; }
-.sehatsetu-tabs .sehatsetu-tab-btn { flex-shrink: 0; }
-.redesigned-studio .sehatsetu-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.redesigned-studio .sehatsetu-tab-btn { justify-content: center; min-width: 0; }
+.repanatomy-tabs { overflow-x: auto; }
+.repanatomy-tabs .repanatomy-tab-btn { flex-shrink: 0; }
+.redesigned-studio .repanatomy-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.redesigned-studio .repanatomy-tab-btn { justify-content: center; min-width: 0; }
 .redesigned-studio .voice-companion button { border: 1px solid #b5cdcd; background: white; color: #173c41; border-radius: 9px; padding: 8px 11px; }
 .redesigned-studio .voice-companion button.voice-primary { background: #175f63; color: white; border-color: #175f63; }

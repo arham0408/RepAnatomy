@@ -1,6 +1,7 @@
 import { flushSync } from "react-dom";
 import "./view-library.css";
 import StudioDashboard from "./studio-dashboard";
+import ExplodeDock from "./explode-dock";
 import { assetUrl } from "./asset-url";
 import { usePanelViewport } from "./use-panel-viewport";
 import {
@@ -22,11 +23,18 @@ import {
   FileText,
   Focus,
   Info,
+  Maximize,
+  Minimize,
+  Moon,
+  Sun,
+  ZoomIn,
+  ZoomOut,
   Layers3,
   Mars,
   Pause,
   Play,
   RotateCcw,
+  RotateCw,
   Search,
   Settings2,
   Venus,
@@ -42,7 +50,7 @@ import {
   ComboboxItem,
   ComboboxEmpty,
 } from "@/components/ui/combobox";
-import AnatomyScene from "./scene";
+import AnatomyScene, { type ViewerAction } from "./scene";
 import BrightnessControl from "./brightness-control";
 import { backgroundColor, backgroundForeground } from "./background-brightness";
 import SystemLayers from "./system-layers";
@@ -94,18 +102,33 @@ const initial: SceneState = {
   rotationSpeed: DEFAULT_ROTATION_SPEED,
   rotationDirection: "clockwise",
 };
-const mobileControlsQuery = "(max-width: 767px), (max-height: 600px) and (orientation: landscape)";
+const mobileControlsQuery = "(max-width: 1100px), (max-height: 600px) and (orientation: landscape)";
 const landscapeControlsQuery = "(max-height: 600px) and (orientation: landscape)";
-const systemsPinnedKey = "human-atlas:systems-pinned";
 export default function Home() {
   const pwa = usePwa();
+  const [focusMode, setFocusMode] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [dusk, setDusk] = useState(false);
+  const [viewerAction, setViewerAction] = useState<ViewerAction | null>(null);
+  const act = (type: ViewerAction["type"]) => setViewerAction({ type, id: Date.now() });
+  useEffect(() => {
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFocusMode(false);
+    };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, []);
+  useEffect(() => {
+    document.documentElement.dataset.light = dusk ? "dusk" : "day";
+    return () => { delete document.documentElement.dataset.light; };
+  }, [dusk]);
   const [brightness, setBrightness] = useState(0);
   const [defaultBackground] = useState(() =>
     getComputedStyle(document.documentElement).getPropertyValue("--background").trim(),
   );
   const viewerBackground = useMemo(
-    () => backgroundColor(defaultBackground, brightness),
-    [defaultBackground, brightness],
+    () => backgroundColor(dusk ? "#14170f" : defaultBackground, brightness),
+    [defaultBackground, brightness, dusk],
   );
   const footerStatus = pwaLabel(pwa);
   const dockFooterStatus =
@@ -192,30 +215,17 @@ export default function Home() {
     [panel, setPanel] = useState<"layers" | "search" | "saved" | "share" | null>(null),
     [details, setDetails] = useState(false),
     [about, setAbout] = useState(false),
-    [sehatSetuOpen, setSehatSetuOpen] = useState(() => new URLSearchParams(location.search).has("demo")),
+    [repanatomyOpen, setRepAnatomyOpen] = useState(() => new URLSearchParams(location.search).has("demo")),
     [query, setQuery] = useState(""),
     [chosen, setChosen] = useState<SearchConcept | null>(null);
-  const [systemsPinned, setSystemsPinned] = useState(() => {
-    try {
-      return localStorage.getItem(systemsPinnedKey) !== "false";
-    } catch {
-      return true;
-    }
-  });
-  const systemsOpen = mobileControls ? panel === "layers" : systemsPinned;
-  useEffect(() => {
-    try {
-      localStorage.setItem(systemsPinnedKey, String(systemsPinned));
-    } catch {
-      /* Pinning still works when storage is unavailable. */
-    }
-  }, [systemsPinned]);
+  const [systemsExpanded, setSystemsExpanded] = useState(false);
+  const systemsOpen = mobileControls ? panel === "layers" : systemsExpanded;
   const openAbout = (updates = false) => {
     setAboutModel(model);
     setAboutUpdates(updates);
     setDetails(false);
     setPanel(null);
-    setSehatSetuOpen(false);
+    setRepAnatomyOpen(false);
     setAbout(true);
   };
   useEffect(() => {
@@ -275,7 +285,7 @@ export default function Home() {
         e.preventDefault();
         setPanel("search");
         setDetails(false);
-        setSehatSetuOpen(false);
+        setRepAnatomyOpen(false);
       }
     };
     window.addEventListener("keydown", key);
@@ -373,7 +383,7 @@ export default function Home() {
       focus: (current.focus ?? 0) + 1,
       focusContext: false,
     }));
-    if (!sehatSetuOpen) {
+    if (!repanatomyOpen) {
       setDetails(true);
     }
     setPanel(null);
@@ -386,6 +396,16 @@ export default function Home() {
     const part = parts.get(id);
     if (part) choose({ id: part.id, name: part.name, elements: [id] });
   };
+  const muscleLinkHandled = useRef(false);
+  useEffect(() => {
+    const muscle = new URLSearchParams(location.search).get("fitness-muscle");
+    if (!muscle || !atlas || progress !== 100 || muscleLinkHandled.current) return;
+    muscleLinkHandled.current = true;
+    const concept = concepts.find(item => item.name.toLowerCase() === muscle.toLowerCase())
+      ?? concepts.find(item => item.name.toLowerCase().includes(muscle.toLowerCase()));
+    if (concept) choose(concept);
+    else { setQuery(muscle); setPanel("search"); }
+  }, [atlas, concepts, progress]);
   const setLayers = (visible: SystemId[]) => {
     setDetails(false);
     setState((current) => ({
@@ -441,7 +461,7 @@ export default function Home() {
   };
   const openPanel = (next: "layers" | "search") => {
     if (next !== "layers") setDetails(false);
-    setSehatSetuOpen(false);
+    setRepAnatomyOpen(false);
     setPanel((p) => (p === next ? null : next));
   };
   const restoreView = (value: SavedView) => {
@@ -493,7 +513,7 @@ export default function Home() {
     const timeout = window.setTimeout(() => setViewNotice(""), 6000);
     return () => window.clearTimeout(timeout);
   }, [viewNotice]);
-  // Stable identity for the SehatSetu explorer: unstable callbacks make its
+  // Stable identity for the RepAnatomy explorer: unstable callbacks make its
   // unmount-cleanup effect fire on every re-render, which wipes pinned
   // highlights and restarts the camera mid-flight while the report is open.
   const updateSceneState = useCallback(
@@ -506,7 +526,7 @@ export default function Home() {
     },
     [],
   );
-  const closeSehatSetu = useCallback(() => setSehatSetuOpen(false), []);
+  const closeRepAnatomy = useCallback(() => setRepAnatomyOpen(false), []);
   const getView = () => {
     if (!cameraPose.current || !settled.current) return null;
     setState((current) => ({ ...current, rotate: false }));
@@ -517,146 +537,7 @@ export default function Home() {
       model,
     );
   };
-  return (
-    <main className={`studio redesigned-studio ${sehatSetuOpen ? "report-mode" : ""}`} style={{
-      "--background": viewerBackground,
-      "--scene-foreground": backgroundForeground(viewerBackground),
-    } as CSSProperties}>
-      {atlas && !error && (
-        <AnatomyScene
-          atlas={atlas}
-          backgroundColor={viewerBackground}
-          state={sceneState}
-          onSelect={choosePart}
-          onProgress={(n) => {
-            setProgress(n);
-            if (n === 100) setError("");
-          }}
-          onError={setError}
-          onCameraChange={(pose, ready) => {
-            cameraPose.current = pose;
-            if (settled.current !== ready) {
-              settled.current = ready;
-              setViewReady(ready);
-            }
-          }}
-        />
-      )}
-      <div className="vignette" />
-      <StudioDashboard
-        pieces={atlas?.parts.length ?? MODELS[model].pieces}
-        systems={activeSystems.length}
-        model={model}
-        ready={progress === 100 && !error}
-        online={pwa.online}
-        reportOpen={sehatSetuOpen}
-        savedOpen={panel === "saved"}
-        hideGuide={sehatSetuOpen || inspectorOpen}
-        onHome={() => {
-          setSehatSetuOpen(false);
-          setDetails(false);
-          setPanel(null);
-          setSystemsPinned(true);
-        }}
-        onReport={() => {
-          setPanel(null);
-          setDetails(false);
-          setSehatSetuOpen(true);
-        }}
-        onSaved={() => {
-          setDetails(false);
-          setSehatSetuOpen(false);
-          setPanel((current) => current === "saved" ? null : "saved");
-        }}
-        onAbout={() => openAbout()}
-        onExplore={(name) => {
-          const concept = concepts.find((item) => item.name.toLowerCase() === name)
-            ?? concepts.find((item) => item.name.toLowerCase() === `left ${name}`)
-            ?? concepts.find((item) => item.name.toLowerCase().includes(name));
-          if (concept) choose(concept);
-          else { setQuery(name); openPanel("search"); }
-        }}
-      />
-      {viewNotice && (
-        <div className="view-notice glass" role="status">
-          {viewNotice}
-        </div>
-      )}
-      <header className="identity">
-        <div className="brand-symbol"><Activity size={25} strokeWidth={1.7} /></div>
-        <div><h1>Sehat<span>Setu</span><span className="edition">3D</span></h1>
-        <div className="identity-meta">Your body, better understood.</div></div>
-      </header>
-      <div ref={savedPanelAnchor} className="explorer-panel-anchor" aria-hidden="true" />
-      <nav className="top-actions" aria-label="Explorer panels">
-        <Button
-          variant="ghost"
-          className={`header-search ${panel === "search" ? "active" : ""}`}
-          onClick={() => openPanel("search")}
-          aria-label="Search anatomy"
-        >
-          <Search size={18} />
-          <span>Search the human body...</span>
-          <kbd>/</kbd>
-        </Button>
-        <Button
-          variant="ghost"
-          className={`header-report ${sehatSetuOpen ? "active" : ""}`}
-          onClick={() => {
-            setPanel(null);
-            setDetails(false);
-            setSehatSetuOpen((open) => !open);
-          }}
-          aria-label="Medical Report Explorer"
-          title="Medical Report Explorer (SehatSetu)"
-        >
-          <FileText size={18} />
-          <span>Explore a report</span>
-        </Button>
-        {atlas && (
-          <ViewLibrary
-            key={model}
-            atlas={atlas}
-            open={panel === "saved"}
-            onOpenChange={(open) => {
-              if (open) {
-                setDetails(false);
-                setSehatSetuOpen(false);
-              }
-              setPanel((current) => (open ? "saved" : current === "saved" ? null : current));
-            }}
-            shareOpen={panel === "share"}
-            onShareOpenChange={(open) => {
-              if (open) {
-                setDetails(false);
-                setSehatSetuOpen(false);
-              }
-              setPanel((current) => (open ? "share" : current === "share" ? null : current));
-            }}
-            panelAnchor={savedPanelAnchor}
-            ready={viewReady && !error}
-            defaultName={chosen?.name ?? "My anatomy view"}
-            getView={getView}
-            onRestore={restoreView}
-          />
-        )}
-        <Button
-          variant="ghost"
-          className="icon-button"
-          aria-label="About this atlas"
-          onClick={() => openAbout()}
-        >
-          <Info size={18} />
-        </Button>
-      </nav>
-      {sehatSetuOpen && atlas && (
-        <MedicalReportExplorer
-          atlas={atlas}
-          sceneState={sceneState}
-          onUpdateSceneState={updateSceneState}
-          onClose={closeSehatSetu}
-        />
-      )}
+  const systemsPanel = (
       <section
         id="systems-panel"
         className={`layers-panel glass ${mobileControls && panel === "layers" ? "mobile-open" : ""}`}
@@ -670,7 +551,7 @@ export default function Home() {
             className="icon-button panel-close"
             onClick={() => {
               setPanel(null);
-              if (!mobileControls) setSystemsPinned(false);
+              if (!mobileControls) setSystemsExpanded(false);
             }}
             aria-label="Close systems"
           >
@@ -707,9 +588,10 @@ export default function Home() {
         {atlas && (
           <SystemLayers
             atlas={atlas}
-            panelOpen={systemsOpen}
+            panelOpen={systemsOpen && (mobileControls || sidebarExpanded)}
             state={state}
             onOnly={(id) => setLayers([id])}
+            onShowAll={() => setLayers(activeSystems.map((system) => system.id))}
             onToggle={toggle}
             onStructureToggle={toggleStructure}
             onInspect={choose}
@@ -739,6 +621,157 @@ export default function Home() {
           </Button>
         </div>
       </section>
+  );
+  return (
+    <main data-light={dusk ? "dusk" : "day"} className={`studio redesigned-studio ${repanatomyOpen ? "report-mode" : ""} ${focusMode ? "focus-mode" : ""}`} style={{
+      "--background": viewerBackground,
+      "--scene-foreground": backgroundForeground(viewerBackground),
+    } as CSSProperties}>
+      {atlas && !error && (
+        <AnatomyScene
+          atlas={atlas}
+          backgroundColor={viewerBackground}
+          state={sceneState}
+          action={viewerAction}
+          dusk={dusk}
+          onReset={reset}
+          onSelect={choosePart}
+          onProgress={(n) => {
+            setProgress(n);
+            if (n === 100) setError("");
+          }}
+          onError={setError}
+          onCameraChange={(pose, ready) => {
+            cameraPose.current = pose;
+            if (settled.current !== ready) {
+              settled.current = ready;
+              setViewReady(ready);
+            }
+          }}
+        />
+      )}
+      <div className="vignette" />
+      <StudioDashboard
+        pieces={atlas?.parts.length ?? MODELS[model].pieces}
+        systems={activeSystems.length}
+        ready={progress === 100 && !error}
+        online={pwa.online}
+        reportOpen={repanatomyOpen}
+        savedOpen={panel === "saved"}
+        hideGuide={repanatomyOpen || inspectorOpen}
+        sidebarExpanded={sidebarExpanded}
+        onSidebarExpandedChange={setSidebarExpanded}
+        sidebarContent={!mobileControls && <>
+          <Button variant="ghost" className="sidebar-systems-toggle" aria-label="Body systems" title="Body systems" aria-expanded={sidebarExpanded && systemsOpen} aria-controls="systems-panel" onClick={() => { setSidebarExpanded(true); setSystemsExpanded((value) => !value); }}>
+            <Layers3 size={19} /><span className="sidebar-label">Body systems</span><ChevronDown size={16} className={`sidebar-label dropdown-chevron ${systemsOpen ? "is-open" : ""}`} />
+          </Button>
+          {systemsPanel}
+        </>}
+        onHome={() => {
+          setRepAnatomyOpen(false);
+          setDetails(false);
+          setPanel(null);
+        }}
+        onReport={() => {
+          setPanel(null);
+          setDetails(false);
+          setRepAnatomyOpen(true);
+        }}
+        onSaved={() => {
+          setDetails(false);
+          setRepAnatomyOpen(false);
+          setPanel((current) => current === "saved" ? null : "saved");
+        }}
+        onAbout={() => openAbout()}
+        onExplore={(name) => {
+          const concept = concepts.find((item) => item.name.toLowerCase() === name)
+            ?? concepts.find((item) => item.name.toLowerCase() === `left ${name}`)
+            ?? concepts.find((item) => item.name.toLowerCase().includes(name));
+          if (concept) choose(concept);
+          else { setQuery(name); openPanel("search"); }
+        }}
+      />
+      {viewNotice && (
+        <div className="view-notice glass" role="status">
+          {viewNotice}
+        </div>
+      )}
+      <header className="identity">
+        <div className="brand-symbol"><Activity size={25} strokeWidth={1.7} /></div>
+        <div><h1>Rep<span>Anatomy</span><span className="edition">3D</span></h1>
+        <div className="identity-meta">Your body, better understood.</div></div>
+      </header>
+      <div ref={savedPanelAnchor} className="explorer-panel-anchor" aria-hidden="true" />
+      <nav className="top-actions" aria-label="Explorer panels">
+        <Button
+          variant="ghost"
+          className={`header-search ${panel === "search" ? "active" : ""}`}
+          onClick={() => openPanel("search")}
+          aria-label="Search anatomy"
+        >
+          <Search size={18} />
+          <span>Search the human body...</span>
+          <kbd>/</kbd>
+        </Button>
+        <Button
+          variant="ghost"
+          className={`header-report ${repanatomyOpen ? "active" : ""}`}
+          onClick={() => {
+            setPanel(null);
+            setDetails(false);
+            setRepAnatomyOpen((open) => !open);
+          }}
+          aria-label="Medical Report Explorer"
+          title="Medical Report Explorer (RepAnatomy)"
+        >
+          <FileText size={18} />
+          <span>Explore a report</span>
+        </Button>
+        {atlas && (
+          <ViewLibrary
+            key={model}
+            atlas={atlas}
+            open={panel === "saved"}
+            onOpenChange={(open) => {
+              if (open) {
+                setDetails(false);
+                setRepAnatomyOpen(false);
+              }
+              setPanel((current) => (open ? "saved" : current === "saved" ? null : current));
+            }}
+            shareOpen={panel === "share"}
+            onShareOpenChange={(open) => {
+              if (open) {
+                setDetails(false);
+                setRepAnatomyOpen(false);
+              }
+              setPanel((current) => (open ? "share" : current === "share" ? null : current));
+            }}
+            panelAnchor={savedPanelAnchor}
+            ready={viewReady && !error}
+            defaultName={chosen?.name ?? "My anatomy view"}
+            getView={getView}
+            onRestore={restoreView}
+          />
+        )}
+        <Button
+          variant="ghost"
+          className="icon-button"
+          aria-label="About this atlas"
+          onClick={() => openAbout()}
+        >
+          <Info size={18} />
+        </Button>
+      </nav>
+      {repanatomyOpen && atlas && (
+        <MedicalReportExplorer
+          atlas={atlas}
+          sceneState={sceneState}
+          onUpdateSceneState={updateSceneState}
+          onClose={closeRepAnatomy}
+        />
+      )}
+      {mobileControls && systemsPanel}
       {panel === "search" && (
         <section
           ref={searchPanel}
@@ -827,7 +860,13 @@ export default function Home() {
         </section>
       )}
       <div className="viewer-controls">
-        <fieldset className="model-switch glass">
+        <fieldset className="model-switch model-tools" onKeyDown={(event) => {
+          if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+          event.preventDefault();
+          const next = model === "male" ? "female" : "male";
+          changeModel(next);
+          event.currentTarget.querySelector<HTMLInputElement>(`input[value="${next}"]`)?.focus();
+        }}>
           <legend className="sr-only">Anatomy model</legend>
           <label className="model-option" title="Male model">
             <input
@@ -835,12 +874,12 @@ export default function Home() {
               type="radio"
               name="anatomy-model"
               value="male"
+              aria-label="Male anatomy"
               checked={model === "male"}
               onChange={() => changeModel("male")}
             />
             <span className="model-option-label">
-              <Mars size={19} aria-hidden="true" />
-              <span className="sr-only">Male</span>
+              <Mars size={18} aria-hidden="true" />
             </span>
           </label>
           <label className="model-option" title="Female model (experimental)">
@@ -849,15 +888,21 @@ export default function Home() {
               type="radio"
               name="anatomy-model"
               value="female"
+              aria-label="Female anatomy (experimental)"
               checked={model === "female"}
               onChange={() => changeModel("female")}
             />
             <span className="model-option-label">
-              <Venus size={19} aria-hidden="true" />
-              <span className="sr-only">Female (experimental)</span>
+              <Venus size={18} aria-hidden="true" />
             </span>
           </label>
         </fieldset>
+        <nav className="specimen-tools" aria-label="Specimen controls">
+          <Button variant="ghost" className="tool-button" aria-label="Zoom in" onClick={() => act("zoom-in")} disabled={progress < 100}><ZoomIn size={18} /></Button>
+          <Button variant="ghost" className="tool-button" aria-label="Zoom out" onClick={() => act("zoom-out")} disabled={progress < 100}><ZoomOut size={18} /></Button>
+          <Button variant="ghost" className="tool-button" aria-label={focusMode ? "Exit focus mode" : "Expand viewer"} aria-pressed={focusMode} onClick={() => setFocusMode((value) => !value)}>{focusMode ? <Minimize size={18} /> : <Maximize size={18} />}</Button>
+          <Button variant="ghost" className="tool-button" aria-label={dusk ? "Switch to day lighting" : "Switch to dusk lighting"} aria-pressed={dusk} onClick={() => setDusk((value) => !value)}>{dusk ? <Moon size={18} /> : <Sun size={18} />}</Button>
+        </nav>
         <nav ref={rotationControls} className="view-controls glass" aria-label="Camera controls">
           {(["three-quarter", "front", "side", "back"] as View[]).map((view, index) => (
             <Button
@@ -984,34 +1029,32 @@ export default function Home() {
           />
         </nav>
       </div>
-      <div className="bottom-dock glass">
+      <div className="turn-pill" aria-label="Turn the anatomy">
+        <Button variant="ghost" aria-label="Turn counterclockwise" onClick={() => act("turn-left")} disabled={progress < 100}><RotateCcw size={16} /></Button>
+        <Button variant="ghost" aria-label={state.rotate ? "Pause full rotation" : "Start full rotation"} aria-pressed={state.rotate} disabled={progress < 100 || state.explode >= .8} onClick={() => setState((current) => ({ ...current, rotate: !current.rotate }))}>360°</Button>
+        <Button variant="ghost" aria-label="Turn clockwise" onClick={() => act("turn-right")} disabled={progress < 100}><RotateCw size={16} /></Button>
+      </div>
+      <ExplodeDock value={state.explode * 100}>
         <Button
           variant="ghost"
           className="dock-layers"
           onClick={() => {
             if (mobileControls) openPanel("layers");
             else {
-              setPanel(systemsPinned ? null : "layers");
-              setSystemsPinned((pinned) => !pinned);
+              setPanel(null);
+              setSystemsExpanded(!(sidebarExpanded && systemsExpanded));
+              setSidebarExpanded(true);
             }
           }}
-          aria-label={mobileControls ? "Open system layers" : "Pin systems panel"}
-          aria-pressed={mobileControls ? undefined : systemsPinned}
-          aria-expanded={systemsOpen}
+          aria-label="Open system layers"
+          aria-expanded={systemsOpen && (mobileControls || sidebarExpanded)}
           aria-controls="systems-panel"
-          title={mobileControls ? undefined : systemsPinned ? "Unpin systems panel" : "Pin systems panel"}
+          title="Body systems"
         >
           <Layers3 size={20} />
           <span>Systems</span>
         </Button>
         <div className="explode-control">
-          <div className="explode-label">
-            <label id="explode-label">Explode anatomy</label>
-            <output>
-              {Math.round(state.explode * 100)}
-              <span>%</span>
-            </output>
-          </div>
           <Slider
             aria-labelledby="explode-label"
             min={0}
@@ -1042,7 +1085,7 @@ export default function Home() {
           <RotateCcw size={18} />
           <span>Reset</span>
         </Button>
-      </div>
+      </ExplodeDock>
       <footer className="studio-footer">
         <span>
           {state.explode > 0.8 ? "Drag to pan" : "Drag to orbit"} <b>·</b> Pinch to zoom <b>·</b>{" "}
@@ -1166,10 +1209,10 @@ export default function Home() {
                 </a>
               ))}
               {/* Section 10: contextual knowledge chatbot for every structure,
-                  works with or without an active SehatSetu report. */}
+                  works with or without an active RepAnatomy report. */}
               {chosen && atlas && (
                 <ScopedChat
-                  className="sehatsetu-structure-chat"
+                  className="repanatomy-structure-chat"
                   atlas={atlas}
                   scoped={{
                     contextType: "structure",
@@ -1244,7 +1287,7 @@ export default function Home() {
             href="https://github.com/llm-junkie/ha"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="View SehatSetu on GitHub (opens in a new tab)"
+            aria-label="View anatomy viewer source on GitHub (opens in a new tab)"
             title="View on GitHub"
           >
             <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true">

@@ -91,7 +91,7 @@ Browser-close cleanup is best effort. Access expiry still applies if a disconnec
 | Isolation, pairing, expiry and revocation | Capability/lifecycle tests in [test_mcp.py](../../backend/test_mcp.py) |
 | Two browser surfaces and verified navigation | [Browser integration test](../../scripts/voice-companion.e2e.mjs) |
 | Decimal measurements and negative findings in fallback | Fallback regression in [test_mcp.py](../../backend/test_mcp.py) |
-| Offline answers avoid sample diagnoses | Offline evidence regression in [sehatsetu-medical.test.mjs](../../scripts/sehatsetu-medical.test.mjs) |
+| Offline answers avoid sample diagnoses | Offline evidence regression in [repanatomy-medical.test.mjs](../../scripts/repanatomy-medical.test.mjs) |
 | Current test results and untested paths | [Verification record](VERIFICATION.md) |
 
 ## Future Amazon integration (not implemented)

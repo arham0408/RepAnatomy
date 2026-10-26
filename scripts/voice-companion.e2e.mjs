@@ -4,9 +4,9 @@ test('report → real MCP → answer → paired browser → verified anatomy →
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/?demo=1');
-  await expect(page.getByRole('region', { name: 'SehatSetu Medical Report Explorer' })).toBeVisible({ timeout: 60000 });
-  await page.locator('.sehatsetu-sample-chip').first().click();
-  await expect(page.locator('.sehatsetu-finding-card').first()).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole('region', { name: 'RepAnatomy Medical Report Explorer' })).toBeVisible({ timeout: 60000 });
+  await page.locator('.repanatomy-sample-chip').first().click();
+  await expect(page.locator('.repanatomy-finding-card').first()).toBeVisible({ timeout: 30000 });
   await page.getByRole('tab', { name: 'Voice companion' }).click();
   await page.getByRole('button', { name: 'Connect report to assistant' }).click();
   await expect(page.getByText(/Connected ·/)).toBeVisible();
@@ -33,7 +33,7 @@ test('report → real MCP → answer → paired browser → verified anatomy →
   await page.getByRole('button', { name: 'Prepare questions for my doctor (English)' }).click();
   await expect(page.locator('.voice-answer').last()).toContainText('What does this mean for me');
   await page.getByText(/Use another browser as the voice companion/).click();
-  await page.locator('.sehatsetu-body').evaluate(element => { element.scrollTop = 0; });
+  await page.locator('.repanatomy-body').evaluate(element => { element.scrollTop = 0; });
   await page.screenshot({ path: 'outputs/hackathon-desktop.png', fullPage: true });
   await peer.setViewportSize({ width: 390, height: 844 });
   await peer.getByRole('button', { name: 'Send question' }).scrollIntoViewIfNeeded();

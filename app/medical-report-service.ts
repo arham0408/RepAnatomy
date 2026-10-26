@@ -254,7 +254,7 @@ export async function analyzeReport(
   const pageCount = 1;
 
   // Try backend endpoint first
-  onProgress?.(45, "Contacting SehatSetu AI analysis pipeline...");
+  onProgress?.(45, "Contacting RepAnatomy AI analysis pipeline...");
   try {
     const formData = new FormData();
     if (content.file) {

@@ -1,6 +1,6 @@
 {
-  "name": "anatomy-studio",
-  "version": "0.7.1",
+  "name": "repanatomy",
+  "version": "0.8.0",
   "private": true,
   "engines": {
     "node": ">=22.18.0"
@@ -17,10 +17,14 @@
     "check": "tsc --noEmit",
     "lint": "oxlint app components lib web scripts vite.config.ts playwright.config.mjs --deny-warnings",
     "test": "node scripts/validate-atlas.mjs && node scripts/validate-atlas.mjs atlas-female.json && node scripts/validate-interactions.mjs && node scripts/validate-assets.mjs && node --test scripts/*.test.mjs",
-    "test:browser": "npm run build -- --base=/ha/ && playwright test"
+    "test:browser": "npm run build -- --base=/ha/ && playwright test",
+    "prepare:pose": "node scripts/prepare-pose.mjs",
+    "test:fitness": "python -m unittest backend.test_fitness -v",
+    "test:fitness:browser": "playwright test --config scripts/fitness.playwright.config.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
+    "@mediapipe/tasks-vision": "1.1.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "1.55.0",

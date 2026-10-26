@@ -34,3 +34,8 @@ yarn-error.log*
 /work/
 __pycache__/
 *.tsbuildinfo
+
+# Generated, checksum-verified pose assets and local verification logs
+/public/pose/
+/test-*.log
+/output/

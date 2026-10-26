@@ -54,7 +54,7 @@ export interface I18nDictionary {
 
 export const TRANSLATIONS: Record<IndianLanguageCode, I18nDictionary> = {
   en: {
-    title: "SehatSetu Medical Report Explorer",
+    title: "RepAnatomy Medical Report Explorer",
     tagline: "Explore clinical findings mapped to verified 3D human anatomy",
     uploadHeading: "Upload Medical Report",
     uploadPrompt: "Drag & drop your medical report (PDF) or click to browse",

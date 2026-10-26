@@ -1,10 +1,14 @@
+# RepAnatomy: retained anatomy/report implementation
+
+For the new movement workspace, see the [current technical report](docs/opencv/TECHNICAL_REPORT.md). The material below describes the existing reference atlas and report companion, including its earlier competition context.
+
 > Detailed viewer reference. For current setup, companion/MCP behavior, provider modes, and security limits, use the [main README](README.md). The current backend fallback returns report excerpts and does not provide the older stock explanations described below.
 
 <div align="center">
 
-<img src="public/favicon.svg" alt="SehatSetu app icon" width="160" height="160" />
+<img src="public/favicon.svg" alt="RepAnatomy app icon" width="160" height="160" />
 
-# SehatSetu
+# RepAnatomy
 
 <p>
   <a href="https://github.com/llm-junkie/ha/actions/workflows/deploy-pages.yml"><img src="https://github.com/llm-junkie/ha/actions/workflows/deploy-pages.yml" alt="Deploy to GitHub Pages" /></a>
@@ -13,7 +17,7 @@
   <a href="#install-and-use-offline"><img src="https://img.shields.io/badge/PWA-offline--ready-887454" alt="PWA: offline-ready" /></a>
 </p>
 
-Interactive 3D anatomy for phones, tablets and desktops, with **SehatSetu** — a
+Interactive 3D anatomy for phones, tablets and desktops, with **RepAnatomy** — a
 multilingual medical-report explorer that maps extracted clinical findings to verified
 3D structures and answers questions by voice in the user's language.
 
@@ -35,7 +39,7 @@ Installation: [iPhone / iPad](#install-on-iphone-or-ipad) · [Mac](#install-on-m
 4. [Environment variables](#environment-variables)
 5. [Project structure](#project-structure)
 6. [Viewer features](#viewer-features)
-7. [SehatSetu: medical report explorer](#sehatsetu-medical-report-explorer)
+7. [RepAnatomy: medical report explorer](#repanatomy-medical-report-explorer)
    - [PDF upload and report analysis](#pdf-upload-and-report-analysis)
    - [Clinical finding cards](#clinical-finding-cards)
    - [Persistent highlight systems](#persistent-highlight-systems)
@@ -59,11 +63,11 @@ Installation: [iPhone / iPad](#install-on-iphone-or-ipad) · [Mac](#install-on-m
 
 ## Overview
 
-SehatSetu is an offline-capable PWA anatomy explorer built on React + Three.js.
+RepAnatomy is an offline-capable PWA anatomy explorer built on React + Three.js.
 Male (BodyParts3D + Z-Anatomy) and experimental female (BodyParts3D + HRA + Z-Anatomy)
 models contain thousands of individually selectable meshes with named concepts.
 
-**SehatSetu** ("health helpdesk") adds a medical-report surface on top of the 3D atlas:
+**RepAnatomy** ("health helpdesk") adds a medical-report surface on top of the 3D atlas:
 
 - Upload a PDF / paste or load sample clinical reports.
 - Deterministic + Groq-LLM extraction into structured findings (negation, laterality,
@@ -126,14 +130,14 @@ as well. Frontend voice UI does not need keys (Web Speech API is local to the br
 ## Project structure
 
 ```
-app/                        React application (the atlas + SehatSetu UI)
+app/                        React application (the atlas + RepAnatomy UI)
   page.tsx                  Main viewer page: layout, systems, search, detail sheet,
                             model switch, mounts MedicalReportExplorer
   scene.tsx                 Three.js scene: batched meshes, explode layout, camera
                             transitions, selection/highlight overlay (pinnedHighlight)
   anatomy.ts                Atlas/SceneState types, SYSTEMS palette, defaults
   anatomy-search.ts         Search concepts + aliases + muscle groups
-  medical-report-explorer.tsx   SehatSetu panel: tabs (Upload / Findings / Chat),
+  medical-report-explorer.tsx   RepAnatomy panel: tabs (Upload / Findings / Chat),
                             highlight toolbar, report chat, availability split
   medical-report-service.ts PDF/text analysis pipeline, local deterministic
                             extraction, scoped chat service (contextType contract)
@@ -157,7 +161,7 @@ backend/
   test_backend.py           Backend integration tests (health, analyze, chat)
 web/                        Vite entry HTML and locale files
 public/models/              atlas.json + atlas-female.json + 38 model chunks (.js/.gz)
-scripts/                    Asset pipeline and tests (sehatsetu-medical.test.mjs, etc.)
+scripts/                    Asset pipeline and tests (repanatomy-medical.test.mjs, etc.)
 data/                       Source conversion inputs
 docs/                       Model notes (female model, skin, nerves, classification)
 ```
@@ -185,7 +189,7 @@ All viewer behavior below is unchanged by the medical-report features:
   camera, selection, layers and explosion percentage.
 - **Language-unaffected 3D state** — switching languages never rebuilds scene or materials.
 
-## SehatSetu: medical report explorer
+## RepAnatomy: medical report explorer
 
 ### PDF upload and report analysis
 
@@ -521,7 +525,7 @@ session's report context is never mixed into another request scope.
 - Resolution identity is always the **real part ID string**; array indices are only
   an internal shortcut in `scene.tsx` keyed by `atlas.parts` order.
 - Model switches rebuild the scene and invalidate per-model caches (recent
-  structures, bookmarks are per model; the SehatSetu mapping recomputes from stored
+  structures, bookmarks are per model; the RepAnatomy mapping recomputes from stored
   findings).
 
 ## Language and voice support matrix
@@ -549,12 +553,12 @@ deterministic UI strings.
 ```sh
 npm run check            # types
 npm run lint             # zero warnings enforced
-npm test                 # 124 tests: atlas/interaction/PWA/SehatSetu
+npm test                 # 124 tests: atlas/interaction/PWA/RepAnatomy
 npm run build            # production build + PWA validation
 python backend/test_backend.py   # live backend: health, analyze (text+PDF), chat
 ```
 
-SehatSetu-specific tests (`scripts/sehatsetu-medical.test.mjs`):
+RepAnatomy-specific tests (`scripts/repanatomy-medical.test.mjs`):
 
 - Verified resolution of organs/conditions in male **and** female catalogues.
 - Sex-specific availability (e.g. uterus in male atlas ⇒ `availableInModel: false`).
@@ -598,7 +602,7 @@ Voice recognition/TTS depend on the OS/browser voices present.
   `app/medical-mapping.ts` (condition key, associated organ, laterality support,
   system). It is used by the 5-tier resolver automatically.
 - **Add a model/structure:** follow the geometry pipeline in the docs below;
-  SehatSetu mapping needs no changes because it resolves against the loaded atlas.
+  RepAnatomy mapping needs no changes because it resolves against the loaded atlas.
 
 The optional WebMCP tools (`agent-tools.ts`) expose anatomy search/inspection in
 compatible browsers, independent of the medical-report features.
@@ -652,13 +656,13 @@ Open [the app](https://llm-junkie.github.io/ha/) in **Safari** → **Share → A
 On **macOS 14+**, open the app in **Safari** → **File → Add to Dock** → **Add**.
 
 ### Install on Android
-Open the app in **Chrome** and use **Install SehatSetu**, or **⋮ → Install**.
+Open the app in **Chrome** and use **Install RepAnatomy**, or **⋮ → Install**.
 
 ### Install on Windows
-Open the app in **Edge** or **Chrome** and use **Install SehatSetu** in the app or the address bar icon.
+Open the app in **Edge** or **Chrome** and use **Install RepAnatomy** in the app or the address bar icon.
 
 ### Install on Linux
-Open the app in **Chrome** and use **Install SehatSetu** or **⋮ → Cast, save, and share → Install page as app**.
+Open the app in **Chrome** and use **Install RepAnatomy** or **⋮ → Cast, save, and share → Install page as app**.
 
 ## App version
 
@@ -667,7 +671,7 @@ For the next release: `npm version patch/minor --no-git-tag-version`, then build
 
 ## Run locally
 
-Use Node.js 24 LTS (`.nvmrc`); Node.js 22.18+ supported. No accounts needed; the viewer runs offline. See [Setup and commands](#setup-and-commands) above for the full command list, and start the FastAPI backend (`npm run server`) only if you want SehatSetu AI/LLM features during development — Vite proxies `/api` to `http://127.0.0.1:8000` automatically.
+Use Node.js 24 LTS (`.nvmrc`); Node.js 22.18+ supported. No accounts needed; the viewer runs offline. See [Setup and commands](#setup-and-commands) above for the full command list, and start the FastAPI backend (`npm run server`) only if you want RepAnatomy AI/LLM features during development — Vite proxies `/api` to `http://127.0.0.1:8000` automatically.
 
 ## Anatomy data
 
@@ -728,7 +732,7 @@ Covers selection, systems, search, isolation, rotation, offline, responsive layo
 | **Kristen Browne and Heidi Schlehlein / [Human Reference Atlas · HuBMAP](https://doi.org/10.48539/HBM352.BTSQ.586)** | *3D Reference Organ Set for United, Female, v1.5* (2023): female HRA source geometry. |
 | **Kristen Browne and contributors / [HuBMAP CCF 3D Reference Object Library](https://github.com/hubmapconsortium/ccf-releases/blob/b036a91aaf7234f462b1249d4a5f4fb0e982f412/v1.3/models/3d-vh-f-skin.glb)** | Female body skin from v1.3, fitted locally (CC BY 4.0). |
 | **Gauthier Kervyn and contributors / [Z-Anatomy](https://github.com/Z-Anatomy/Models-of-human-anatomy), distributed by [Lluís Vinent Juanico](https://github.com/LluisV/Z-Anatomy)** | Spinal and peripheral neural source surfaces (CC BY-SA 4.0). |
-| **Groq** | Optional LLM inference for the SehatSetu report/chat features (bring your own API key). |
+| **Groq** | Optional LLM inference for the RepAnatomy report/chat features (bring your own API key). |
 | **[Rayzi0417 / PR #283](https://github.com/ashemag/human-atlas/pull/283)** | Reference for the peripheral-nerve integration. |
 
 Human Atlas Enhanced also credits [Female Atlas by Mahendra Beniwal](https://github.com/HiMahendraBeniwal/female-atlas) as an inspiration for its breast presentation.

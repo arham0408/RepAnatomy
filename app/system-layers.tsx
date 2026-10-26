@@ -13,6 +13,7 @@ interface Props {
   panelOpen: boolean;
   state: SceneState;
   onOnly: (system: SystemId) => void;
+  onShowAll: () => void;
   onToggle: (system: SystemId) => void;
   onStructureToggle: (ids: string[], visible: boolean) => void;
   onInspect: (concept: { id: string; name: string; elements: string[] }) => void;
@@ -24,6 +25,7 @@ export default function SystemLayers({
   panelOpen,
   state,
   onOnly,
+  onShowAll,
   onToggle,
   onStructureToggle,
   onInspect,
@@ -32,14 +34,28 @@ export default function SystemLayers({
   const groups = useMemo(() => systemStructures(atlas), [atlas]);
   const parts = useMemo(() => new Map(atlas.parts.map((part) => [part.id, part])), [atlas]);
   const [expanded, setExpanded] = useState<SystemId[]>([]);
+  const [pickedSystem, setPickedSystem] = useState<SystemId | "all">("all");
   const [filters, setFilters] = useState<Partial<Record<SystemId, string>>>({});
   const [limits, setLimits] = useState<Partial<Record<SystemId, number>>>({});
   const systems = SYSTEMS.filter((system) => groups.has(system.id)).sort(
     (a, b) => Number(b.id === "integumentary") - Number(a.id === "integumentary"),
   );
   return (
+    <>
+    <label className="system-picker">
+      <span>Explore a body system</span>
+      <select aria-label="Choose a body system" value={pickedSystem} onChange={(event) => {
+        const id = event.target.value as SystemId | "all";
+        setPickedSystem(id);
+        if (id === "all") { setExpanded([]); onShowAll(); }
+        else { setExpanded([id]); onOnly(id); }
+      }}>
+        <option value="all">All body systems</option>
+        {systems.map((system) => <option key={system.id} value={system.id}>{system.name}</option>)}
+      </select>
+    </label>
     <div className="system-list">
-      {systems.map((system) => {
+      {systems.filter((system) => pickedSystem === "all" || pickedSystem === system.id).map((system) => {
         const structures = groups.get(system.id)!;
         const open = expanded.includes(system.id);
         const query = (filters[system.id] ?? "").trim().toLowerCase();
@@ -154,5 +170,6 @@ export default function SystemLayers({
         );
       })}
     </div>
+    </>
   );
 }

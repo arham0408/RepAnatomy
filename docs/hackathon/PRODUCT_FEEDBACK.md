@@ -1,6 +1,6 @@
 # Product feedback and observed friction
 
-Implementation feedback based on the tools used by SehatSetu and observed local verification. The table distinguishes directly tested behavior from checks requiring live provider access or physical audio testing.
+Implementation feedback based on the tools used by RepAnatomy and observed local verification. The table distinguishes directly tested behavior from checks requiring live provider access or physical audio testing.
 
 | Tool | Used for / what worked | Limitations / onboarding | Would use again? |
 | --- | --- | --- | --- |

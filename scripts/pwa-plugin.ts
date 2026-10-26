@@ -8,9 +8,9 @@ const digest = (data: string | Uint8Array) => createHash("sha256").update(data).
 
 export const pwaManifest = (base: string) => ({
   id: base,
-  name: "SehatSetu",
-  short_name: "SehatSetu",
-  description: "Explore human anatomy in 3D, online or offline.",
+  name: "RepAnatomy",
+  short_name: "RepAnatomy",
+  description: "Understand movement with OpenCV 5 coaching and interactive 3D anatomy.",
   lang: "en",
   start_url: base,
   scope: base,

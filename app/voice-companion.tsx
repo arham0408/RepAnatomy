@@ -123,7 +123,7 @@ export default function VoiceCompanion({ report, language = "en", companion = fa
       if (!alive.current) return;
       const responseLanguage = result.response_language || requestedLanguage;
       setAnswer(result);
-      setMessages(previous => [...previous.slice(-15), { role: "SehatSetu", text: result.answer, language: responseLanguage, provider: result.provider }]);
+      setMessages(previous => [...previous.slice(-15), { role: "RepAnatomy", text: result.answer, language: responseLanguage, provider: result.provider }]);
       if (autoRead) audio.speak(result.answer, responseLanguage);
     });
   }
@@ -143,7 +143,7 @@ export default function VoiceCompanion({ report, language = "en", companion = fa
   return <section className={`voice-companion ${companion ? "companion-page" : ""}`} aria-label="Alexa+ experience simulator">
     <span className="voice-eyebrow">ALEXA+ TRACK · WEB SIMULATION</span>
     <h2>Your report. A conversation.</h2>
-    <p className="voice-intro">Understand the words, hear an explanation, and explore the anatomy. This is a SehatSetu simulation, with no live Alexa device connection.</p>
+    <p className="voice-intro">Understand the words, hear an explanation, and explore the anatomy. This is a RepAnatomy simulation, with no live Alexa device connection.</p>
     {!connected ? <div className="voice-card">
       {companion ? <>
         <label htmlFor="pair-code">Invitation from the report owner</label>
@@ -197,7 +197,7 @@ export default function VoiceCompanion({ report, language = "en", companion = fa
       {viewerStatus && <p role="status" className="voice-notice">{viewerStatus}</p>}
       <button disabled={busy} onClick={() => void run(async () => {
         const result = await client.call<{ questions: { question: string }[] }>("prepare_questions", { session_key: connected.session_key });
-        setMessages(previous => [...previous.slice(-15), { role: "SehatSetu", language: "en", text: result.questions.length ? result.questions.map(item => item.question).join("\n\n") : "No structured findings extracted. Ask your clinician to review the original report." }]);
+        setMessages(previous => [...previous.slice(-15), { role: "RepAnatomy", language: "en", text: result.questions.length ? result.questions.map(item => item.question).join("\n\n") : "No structured findings extracted. Ask your clinician to review the original report." }]);
       })}>Prepare questions for my doctor (English)</button>
       {!companion && <details className="voice-card"><summary>Use another browser as the voice companion · {peers} paired</summary>
         <p>Create an invitation only for a device you trust. It grants access to this report. The invitation expires after two minutes and works once.</p>

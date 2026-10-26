@@ -90,3 +90,8 @@ The [classification audit](https://github.com/llm-junkie/ha/blob/main/docs/anato
 ## Screenshots, comparison figures, and retained source fixtures
 
 The README's example screenshots and the uterosacral comparison figure render adaptations of the datasets credited above. The source fixture in `data/anatomy/uterosacral-source.json` retains HRA-derived geometry and registration references under the same dataset attribution. Preserve the applicable dataset credits and license links above, and identify adaptations when redistributing these data or anatomy images. The application code's MIT license and copyright notice remain separate from the anatomy data license.
+## RepAnatomy movement workspace
+
+The browser pose runtime is `@mediapipe/tasks-vision` 1.1.0, distributed under Apache-2.0. A copy of the license is in [licenses/mediapipe.txt](licenses/mediapipe.txt). Pose Landmarker Lite is downloaded from the official versioned MediaPipe model hosting path; its origin, bytes and pinned SHA-256 are recorded in `data/fitness/pose-model.json`. Review the [official pose documentation](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker/web_js) and applicable Google model/runtime terms before redistribution. These components remain third-party materials.
+
+The RepAnatomy mark, synthetic skeleton demonstration, exercise summaries and meal examples were authored for this local extension. Exercise/nutrition source links appear in the UI and `docs/opencv/SOURCES.md`. No measured muscle activation or external exercise-classifier benchmark is claimed.

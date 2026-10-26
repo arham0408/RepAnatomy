@@ -31,6 +31,9 @@ async def lifespan(app):
         while True:
             await asyncio.sleep(30)
             prune()
+            from backend.fitness import lock, prune_workouts
+            with lock:
+                prune_workouts()
 
     async with mcp.session_manager.run():
         cleanup = asyncio.create_task(expire_reports())
@@ -43,6 +46,9 @@ async def lifespan(app):
             except asyncio.CancelledError:
                 pass
             sessions.clear(); companions.clear(); invitations.clear()
+            from backend.fitness import lock, workouts
+            with lock:
+                workouts.clear()
 
 try:
     from backend.models import (
@@ -71,17 +77,22 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("sehatsetu.server")
+logger = logging.getLogger("repanatomy.server")
 
 app = FastAPI(
     lifespan=lifespan,
-    title="SehatSetu Medical Report Explorer API",
+    title="RepAnatomy Vision & Anatomy API",
     version="1.0.0",
-    description="Backend API for medical report extraction and 3D anatomy mapping",
+    description="OpenCV 5 movement coaching, exercise planning, report exploration and 3D anatomy mapping",
 )
+
+from backend.fitness import router as fitness_router
+app.include_router(fitness_router)
 
 # Configure CORS
 origins = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
     "http://localhost:3016",
     "http://127.0.0.1:3016",
     "http://localhost:5173",
@@ -90,7 +101,7 @@ origins = [
     "http://localhost:4173",
     "http://127.0.0.1:4173",
 ]
-origins += [value.strip() for value in os.getenv("SEHATSETU_ALLOWED_ORIGINS", "").split(",") if value.strip()]
+origins += [value.strip() for value in os.getenv("REPANATOMY_ALLOWED_ORIGINS", "").split(",") if value.strip()]
 
 app.add_middleware(
     CORSMiddleware,
@@ -101,7 +112,7 @@ app.add_middleware(
 )
 app.add_middleware(RequestGuard, origins=origins)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"] +
-    [value.strip() for value in os.getenv("SEHATSETU_ALLOWED_HOSTS", "").split(",") if value.strip()])
+    [value.strip() for value in os.getenv("REPANATOMY_ALLOWED_HOSTS", "").split(",") if value.strip()])
 
 provider = MedicalAIProvider()
 
@@ -259,4 +270,9 @@ async def chat_endpoint(request: ChatRequest):
 
 
 # Register last so the MCP ASGI app does not shadow the existing REST routes.
-app.mount("/", mcp.streamable_http_app())
+if os.getenv("REPANATOMY_SERVE_WEB") == "1":
+    from backend.web import WebAndMcp, HealthProbe
+    app.add_middleware(HealthProbe)
+    app.mount("/", WebAndMcp(mcp.streamable_http_app()))
+else:
+    app.mount("/", mcp.streamable_http_app())

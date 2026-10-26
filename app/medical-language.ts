@@ -1,7 +1,7 @@
 import type { IndianLanguageCode } from "./medical-types.ts";
 
 /**
- * Lightweight per-message language resolution for the SehatSetu chat.
+ * Lightweight per-message language resolution for the RepAnatomy chat.
  *
  * Priority (per product spec):
  * 1. An explicit language request inside the current message wins.

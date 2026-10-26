@@ -9,7 +9,7 @@ try:
 except ImportError:
     from models import MedicalFindingModel, AnatomicalMentionModel, ChatResponse
 
-logger = logging.getLogger("sehatsetu.provider")
+logger = logging.getLogger("repanatomy.provider")
 
 CHAT_LANGUAGE_NAMES = {
     "en": "English",
@@ -22,7 +22,7 @@ CHAT_LANGUAGE_NAMES = {
     "kn": "Kannada (ಕನ್ನಡ)",
 }
 
-SYSTEM_EXTRACTION_PROMPT = """You are SehatSetu Medical AI, a specialized clinical terminology extraction engine for 3D anatomical mapping.
+SYSTEM_EXTRACTION_PROMPT = """You are RepAnatomy Medical AI, a specialized clinical terminology extraction engine for 3D anatomical mapping.
 Your job is to analyze clinical medical reports (radiology, ultrasound, pathology, discharge summaries) and extract structured medical findings with their anatomical associations.
 
 STRICT MEDICAL SAFETY & EXTRACTION RULES:
@@ -254,7 +254,7 @@ Extract all anatomical and pathological findings from this medical report:
             structure_description,
         )
 
-        chat_system_prompt = f"""You are SehatSetu AI, an empathetic, clear medical report companion.
+        chat_system_prompt = f"""You are RepAnatomy AI, an empathetic, clear medical report companion.
 Rules:
 1. Answer the user's current question in the resolved response language supplied by the application ({active_language}). Or the explicit language the user requested.
 2. Continue in that language unless the user asks for another.

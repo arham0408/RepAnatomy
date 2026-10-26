@@ -69,7 +69,7 @@ export async function installApp() {
     await prompt.prompt();
     const choice = await prompt.userChoice;
     if (choice.outcome === 'accepted') patch({ notice: 'Installation requested. Follow your browser’s instructions.' });
-  } catch { patch({ notice: 'Use your browser’s menu to install SehatSetu.' }); }
+  } catch { patch({ notice: 'Use your browser’s menu to install RepAnatomy.' }); }
   finally { patch({ installing: false }); }
 }
 
@@ -85,7 +85,7 @@ export async function updateApp() {
       patch({ updateNotice: 'Preparing the new version for offline use…' }),
     );
     if (worker) {
-      patch({ updating: true, updateAvailable: true, updateNotice: 'Updating SehatSetu…' });
+      patch({ updating: true, updateAvailable: true, updateNotice: 'Updating RepAnatomy…' });
       worker.postMessage({ type: 'human-atlas:update' });
     } else patch({ updateAvailable: false, updateNotice: 'You’re up to date.' });
   } catch {
@@ -108,7 +108,7 @@ export function startPwa() {
   });
   window.addEventListener('appinstalled', () => {
     installPrompt = undefined;
-    patch({ installed: true, canInstall: false, notice: 'SehatSetu is installed.' });
+    patch({ installed: true, canInstall: false, notice: 'RepAnatomy is installed.' });
   });
   const connectivity = () => {
     patch({ online: navigator.onLine });

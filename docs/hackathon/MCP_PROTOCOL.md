@@ -1,6 +1,6 @@
 # MCP protocol and tool reference
 
-SehatSetu exposes a real self-hosted MCP server at `http://127.0.0.1:8000/mcp`. The browser reaches the same endpoint through Vite at `http://localhost:3016/mcp`.
+RepAnatomy exposes a real self-hosted MCP server at `http://127.0.0.1:8000/mcp`. The browser reaches the same endpoint through Vite at `http://localhost:3016/mcp`.
 
 **Protocol:** 2025-11-25. **Transport:** Streamable HTTP, JSON response mode. **SDK:** official `mcp==1.30.0` Python package. **Payload:** JSON-RPC 2.0. **Entry point:** `python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000`.
 
@@ -45,7 +45,7 @@ Initialize:
   "params": {
     "protocolVersion": "2025-11-25",
     "capabilities": {},
-    "clientInfo": { "name": "sehatsetu-review-client", "version": "1.0.0" }
+    "clientInfo": { "name": "repanatomy-review-client", "version": "1.0.0" }
   }
 }
 ```

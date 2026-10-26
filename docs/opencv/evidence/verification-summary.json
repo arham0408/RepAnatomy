@@ -1,0 +1,31 @@
+{
+  "project": "RepAnatomy",
+  "version": "0.8.0",
+  "local_date": "2026-10-27",
+  "timezone": "Asia/Kolkata",
+  "opencv_runtime": "5.0.0",
+  "checks": {
+    "typescript": "passed",
+    "lint": "passed",
+    "javascript_tests": {"passed": 126, "failed": 0},
+    "fitness_and_mcp_python": {"passed": 25, "failed": 0},
+    "report_rest_functions": {"passed": 4, "failed": 0},
+    "gym_browser": {"passed": 8, "failed": 0},
+    "report_companion_browser": {"passed": 1, "failed": 0},
+    "atlas_browser": {"passed": 12, "failed": 0, "note": "Successful targeted runs after fixes; not one final invocation."},
+    "production_browser": {"passed": 2, "failed": 0},
+    "production_asgi": "passed including same-origin browser headers",
+    "mcp_sdk": "passed all nine tools",
+    "cloudformation_lint": "passed cfn-lint 1.58.0",
+    "root_and_subpath_pwa_builds": "passed"
+  },
+  "synthetic_evaluation": "synthetic-evaluation.json",
+  "pending": [
+    "Consented human exercise and form validation",
+    "Trained automatic exercise classification",
+    "Docker execution and AWS deployment evidence",
+    "New judge-accessible fitness video and submission access"
+  ],
+  "pushed": false,
+  "deployed": false
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "squat", "name": "Bodyweight squat", "pattern": "Lower body", "view": "side",
+    "primary": ["Quadriceps", "Gluteus maximus"], "secondary": ["Hamstrings", "Abdominals"],
+    "atlas_query": "rectus femoris", "joint": "knee", "low": 100, "high": 160,
+    "cues": ["Keep your feet grounded and your knees aligned with your feet.", "Lower with control through a comfortable range, then stand tall."],
+    "source": "https://www.acefitness.org/resources/everyone/exercise-library/135/bodyweight-squat/"
+  },
+  {
+    "id": "pushup", "name": "Push-up", "pattern": "Upper body push", "view": "side",
+    "primary": ["Pectoralis major", "Triceps brachii"], "secondary": ["Anterior deltoid", "Abdominals"],
+    "atlas_query": "pectoralis major", "joint": "elbow", "low": 100, "high": 155,
+    "cues": ["Keep your head, trunk and legs in one line.", "Lower and press with control; use an incline if you need an easier variation."],
+    "source": "https://www.acefitness.org/resources/everyone/exercise-library/41/push-up/"
+  },
+  {
+    "id": "curl", "name": "Biceps curl", "pattern": "Elbow flexion", "view": "side",
+    "primary": ["Biceps brachii", "Brachialis"], "secondary": ["Brachioradialis"],
+    "atlas_query": "biceps brachii", "joint": "elbow", "low": 65, "high": 150,
+    "cues": ["Keep your upper arms near your torso.", "Bend and straighten your elbows without swinging your trunk."],
+    "source": "https://www.acefitness.org/resources/everyone/exercise-library/70/bicep-curl/"
+  },
+  {
+    "id": "press", "name": "Shoulder press", "pattern": "Upper body push", "view": "side",
+    "primary": ["Deltoid", "Triceps brachii"], "secondary": ["Trapezius", "Serratus anterior"],
+    "atlas_query": "deltoid", "joint": "elbow", "low": 100, "high": 155,
+    "cues": ["Keep your trunk upright and choose a comfortable load.", "Press overhead with control, then return to shoulder height."],
+    "source": "https://www.acefitness.org/resources/everyone/exercise-library/71/standing-shoulder-press/"
+  },
+  {
+    "id": "lunge", "name": "Forward lunge", "pattern": "Lower body", "view": "side",
+    "primary": ["Quadriceps", "Gluteus maximus"], "secondary": ["Hamstrings", "Gluteus medius"],
+    "atlas_query": "gluteus maximus", "joint": "knee", "low": 105, "high": 160,
+    "cues": ["Step forward with space for balance and keep your trunk controlled.", "Lower within a comfortable range, then return to standing; alternate legs."],
+    "source": "https://www.acefitness.org/resources/everyone/exercise-library/8/forward-lunge/"
+  }
+]

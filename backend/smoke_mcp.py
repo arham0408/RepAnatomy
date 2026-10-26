@@ -8,7 +8,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="Verify SehatSetu's real MCP transport and all nine tools using synthetic data.")
+    parser = argparse.ArgumentParser(description="Verify RepAnatomy's real MCP transport and all nine tools using synthetic data.")
     parser.add_argument("url", nargs="?", default="http://127.0.0.1:8000/mcp")
     parser.add_argument("--output", type=Path, help="Optional sanitized JSON verification report (no session or invitation keys).")
     args = parser.parse_args()

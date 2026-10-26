@@ -511,16 +511,16 @@ export default function MedicalReportExplorer({
   };
 
   return (
-    <div className="sehatsetu-panel" role="region" aria-label="SehatSetu Medical Report Explorer">
+    <div className="repanatomy-panel" role="region" aria-label="RepAnatomy Medical Report Explorer">
       {/* Header */}
-      <header className="sehatsetu-header">
-        <div className="sehatsetu-header-title">
-          <span className="sehatsetu-badge">SEHATSETU</span>
+      <header className="repanatomy-header">
+        <div className="repanatomy-header-title">
+          <span className="repanatomy-badge">RepAnatomy</span>
           <h2>Report Explorer</h2>
         </div>
-        <div className="sehatsetu-header-controls">
+        <div className="repanatomy-header-controls">
           <select
-            className="sehatsetu-lang-select"
+            className="repanatomy-lang-select"
             value={language}
             onChange={(e) => {
               audioCtrl.current.stopSpeaking();
@@ -540,7 +540,7 @@ export default function MedicalReportExplorer({
           </select>
           <button
             type="button"
-            className="sehatsetu-icon-btn"
+            className="repanatomy-icon-btn"
             onClick={handleClose}
             aria-label="Close report explorer"
             title="Exit report mode"
@@ -551,10 +551,10 @@ export default function MedicalReportExplorer({
       </header>
 
       {/* Tabs */}
-      <div className="sehatsetu-tabs" role="tablist">
+      <div className="repanatomy-tabs" role="tablist">
         <button
           type="button"
-          className={`sehatsetu-tab-btn ${activeTab === "upload" ? "active" : ""}`}
+          className={`repanatomy-tab-btn ${activeTab === "upload" ? "active" : ""}`}
           onClick={() => setActiveTab("upload")}
           role="tab"
           aria-label={t.uploadHeading}
@@ -565,7 +565,7 @@ export default function MedicalReportExplorer({
         </button>
         <button
           type="button"
-          className={`sehatsetu-tab-btn ${activeTab === "findings" ? "active" : ""}`}
+          className={`repanatomy-tab-btn ${activeTab === "findings" ? "active" : ""}`}
           onClick={() => setActiveTab("findings")}
           role="tab"
           aria-label={t.findingsHeading}
@@ -581,7 +581,7 @@ export default function MedicalReportExplorer({
         </button>
         <button
           type="button"
-          className={`sehatsetu-tab-btn ${activeTab === "chat" ? "active" : ""}`}
+          className={`repanatomy-tab-btn ${activeTab === "chat" ? "active" : ""}`}
           onClick={() => setActiveTab("chat")}
           role="tab"
           aria-label={t.chatHeading}
@@ -591,14 +591,14 @@ export default function MedicalReportExplorer({
           <span>{reportTabs[language][2]}</span>
         </button>
         <button type="button" role="tab" aria-selected={activeTab === "assistant"}
-          className={`sehatsetu-tab-btn ${activeTab === "assistant" ? "active" : ""}`}
+          className={`repanatomy-tab-btn ${activeTab === "assistant" ? "active" : ""}`}
           onClick={() => { audioCtrl.current.stopSpeaking(); audioCtrl.current.stopListening(); setIsSpeaking(false); setIsListening(false); setActiveTab("assistant"); }}>
           <Sparkles size={14} /><span>Voice companion</span>
         </button>
       </div>
 
       {/* Body Area */}
-      <div className="sehatsetu-body">
+      <div className="repanatomy-body">
         <div hidden={activeTab !== "assistant"}>
           <VoiceCompanion key={activeReport?.reportId || "no-report"} report={activeReport} language={language} visible={activeTab === "assistant"}
             onNavigate={terms => {
@@ -610,8 +610,8 @@ export default function MedicalReportExplorer({
         </div>
         {/* Active Report Header if report is loaded */}
         {activeReport && (
-          <div className="sehatsetu-active-report-bar">
-            <div className="sehatsetu-report-name" title={activeReport.filename}>
+          <div className="repanatomy-active-report-bar">
+            <div className="repanatomy-report-name" title={activeReport.filename}>
               <FileText size={14} />
               <span>{activeReport.filename}</span>
             </div>
@@ -628,10 +628,10 @@ export default function MedicalReportExplorer({
 
         {/* 3D Anatomy Viewport Toolbar (Visible when findings are present) */}
         {activeReport && visualizableFindings.length > 0 && (
-          <div className="sehatsetu-viewer-toolbar" aria-label="Anatomical visualization controls">
+          <div className="repanatomy-viewer-toolbar" aria-label="Anatomical visualization controls">
             <button
               type="button"
-              className={`sehatsetu-toolbar-btn ${isolateMode ? "active" : ""}`}
+              className={`repanatomy-toolbar-btn ${isolateMode ? "active" : ""}`}
               onClick={handleToggleIsolate}
               title={isolateMode ? "Show all anatomy again" : "Hide surrounding anatomy and zoom in on the highlighted organ"}
               aria-pressed={isolateMode}
@@ -641,7 +641,7 @@ export default function MedicalReportExplorer({
             </button>
             <button
               type="button"
-              className="sehatsetu-toolbar-btn"
+              className="repanatomy-toolbar-btn"
               onClick={handleHighlightAll}
               title="Highlight all verified findings from report simultaneously"
             >
@@ -650,7 +650,7 @@ export default function MedicalReportExplorer({
             </button>
             <button
               type="button"
-              className="sehatsetu-toolbar-btn"
+              className="repanatomy-toolbar-btn"
               onClick={handleResetView}
               title="Reset 3D view and restore original anatomy state"
             >
@@ -664,14 +664,14 @@ export default function MedicalReportExplorer({
         {activeTab === "findings" && (
           <div className="flex flex-col gap-3">
             {reportState.status === "extracting" || reportState.status === "analyzing" ? (
-              <div className="sehatsetu-progress-box">
-                <div className="sehatsetu-progress-header">
+              <div className="repanatomy-progress-box">
+                <div className="repanatomy-progress-header">
                   <span>{reportState.progressMessage || t.analyzing}</span>
                   <span>{reportState.progressPercent || 40}%</span>
                 </div>
-                <div className="sehatsetu-progress-track">
+                <div className="repanatomy-progress-track">
                   <div
-                    className="sehatsetu-progress-bar"
+                    className="repanatomy-progress-bar"
                     style={{ width: `${reportState.progressPercent || 40}%` }}
                   />
                 </div>
@@ -688,16 +688,16 @@ export default function MedicalReportExplorer({
                 </button>
               </div>
             ) : (
-              <div className="sehatsetu-findings-list">
+              <div className="repanatomy-findings-list">
                 {/* 3D Clicked Organ Context Card Grounded in Report */}
                 {selectedOrganContext && (
-                  <div className={`sehatsetu-inspected-card ${selectedOrganContext.finding ? "has-finding" : "reference"}`}>
-                    <div className="sehatsetu-inspected-header">
-                      <div className="sehatsetu-inspected-title">
+                  <div className={`repanatomy-inspected-card ${selectedOrganContext.finding ? "has-finding" : "reference"}`}>
+                    <div className="repanatomy-inspected-header">
+                      <div className="repanatomy-inspected-title">
                         <Sparkles size={14} className={selectedOrganContext.finding ? "text-amber-500" : "text-blue-500"} />
                         <span>3D Inspected: {selectedOrganContext.partName}</span>
                       </div>
-                      <span className={`sehatsetu-status-badge ${selectedOrganContext.finding ? (selectedOrganContext.finding.negation === "ruled_out" ? "ruled_out" : "confirmed") : "confirmed"}`}>
+                      <span className={`repanatomy-status-badge ${selectedOrganContext.finding ? (selectedOrganContext.finding.negation === "ruled_out" ? "ruled_out" : "confirmed") : "confirmed"}`}>
                         {selectedOrganContext.finding
                           ? selectedOrganContext.finding.negation === "ruled_out"
                             ? "Ruled Out in Report"
@@ -728,10 +728,10 @@ export default function MedicalReportExplorer({
                       </p>
                     )}
 
-                    <div className="sehatsetu-inspected-actions">
+                    <div className="repanatomy-inspected-actions">
                       <button
                         type="button"
-                        className="sehatsetu-focus-btn text-xs"
+                        className="repanatomy-focus-btn text-xs"
                         onClick={() => {
                           setActiveTab("chat");
                           void handleSendMessage(
@@ -755,13 +755,13 @@ export default function MedicalReportExplorer({
                       if (el) findingCardsRef.current.set(f.findingId, el);
                       else findingCardsRef.current.delete(f.findingId);
                     }}
-                    className={`sehatsetu-finding-card ${activeFindingId === f.findingId ? "active-target" : ""}`}
+                    className={`repanatomy-finding-card ${activeFindingId === f.findingId ? "active-target" : ""}`}
                     onClick={() => handleSelectFinding(f)}
                   >
-                    <div className="sehatsetu-finding-header">
-                      <div className="sehatsetu-finding-term">{f.term}</div>
+                    <div className="repanatomy-finding-header">
+                      <div className="repanatomy-finding-term">{f.term}</div>
                       <span
-                        className={`sehatsetu-status-badge ${f.negation === "ruled_out" ? "ruled_out" : f.certainty === "suspected" ? "suspected" : "confirmed"}`}
+                        className={`repanatomy-status-badge ${f.negation === "ruled_out" ? "ruled_out" : f.certainty === "suspected" ? "suspected" : "confirmed"}`}
                       >
                         {f.negation === "ruled_out"
                           ? t.negated
@@ -771,14 +771,14 @@ export default function MedicalReportExplorer({
                       </span>
                     </div>
 
-                    <p className="sehatsetu-finding-explanation">{f.explanation}</p>
+                    <p className="repanatomy-finding-explanation">{f.explanation}</p>
 
                     {/* Targets row */}
-                    <div className="sehatsetu-targets-row">
+                    <div className="repanatomy-targets-row">
                       {f.verifiedTargets.map((target) => (
                         <span
                           key={target.targetId}
-                          className={`sehatsetu-organ-pill ${target.relationshipType}`}
+                          className={`repanatomy-organ-pill ${target.relationshipType}`}
                         >
                           <CheckCircle2 size={11} />
                           <span>{target.name}</span>
@@ -789,7 +789,7 @@ export default function MedicalReportExplorer({
                       ))}
 
                       {f.verifiedTargets.length === 0 && (
-                        <span className="sehatsetu-organ-pill unresolved">
+                        <span className="repanatomy-organ-pill unresolved">
                           <AlertCircle size={11} />
                           <span>{t.unresolvedTag}</span>
                         </span>
@@ -797,16 +797,16 @@ export default function MedicalReportExplorer({
                     </div>
 
                     {/* Evidence quote */}
-                    <div className="sehatsetu-finding-evidence">
+                    <div className="repanatomy-finding-evidence">
                       &ldquo;{f.source.evidenceText || f.reportPhrase}&rdquo;
                     </div>
 
                     {/* Actions */}
-                    <div className="sehatsetu-finding-actions">
+                    <div className="repanatomy-finding-actions">
                       {f.verifiedTargets.length > 0 && (
                         <button
                           type="button"
-                          className="sehatsetu-focus-btn"
+                          className="repanatomy-focus-btn"
                           onClick={(e) => {
                             e.stopPropagation();
                             // One action: isolate the organ in 3D AND open the
@@ -828,7 +828,7 @@ export default function MedicalReportExplorer({
                       )}
                       {/* Per-finding contextual AI chat with voice (own history, own language) */}
                       <ScopedChat
-                        className="sehatsetu-finding-ask"
+                        className="repanatomy-finding-ask"
                         atlas={atlas}
                         scoped={{
                           contextType: "finding",
@@ -861,7 +861,7 @@ export default function MedicalReportExplorer({
                     model are kept in data, never assigned fake meshes, and are
                     surfaced only as this concise note. */}
                 {notVisualizableFindings.length > 0 && (
-                  <div className="sehatsetu-unavailable-note">
+                  <div className="repanatomy-unavailable-note">
                     <AlertCircle size={12} className="shrink-0" />
                     <span>
                       {t.notVisualizable} ({notVisualizableFindings.length}):{" "}
@@ -877,7 +877,7 @@ export default function MedicalReportExplorer({
         {/* TAB 2: AI CHAT ASSISTANT */}
         {activeTab === "chat" && (
           <div className="flex flex-col gap-3 flex-1">
-            <div className="sehatsetu-chat-stream" ref={chatStreamRef}>
+            <div className="repanatomy-chat-stream" ref={chatStreamRef}>
               {chatMessages.length === 0 ? (
                 <div className="p-4 text-center text-slate-500 text-xs">
                   <Bot size={28} className="mx-auto mb-2 text-blue-500 opacity-60" />
@@ -885,15 +885,15 @@ export default function MedicalReportExplorer({
                 </div>
               ) : (
                 chatMessages.map((msg) => (
-                  <div key={msg.id} className={`sehatsetu-chat-msg ${msg.sender}`}>
-                    <div className="sehatsetu-msg-bubble">
+                  <div key={msg.id} className={`repanatomy-chat-msg ${msg.sender}`}>
+                    <div className="repanatomy-msg-bubble">
                       <p className="whitespace-pre-wrap m-0">{msg.text}</p>
                     </div>
                     {msg.sender === "assistant" && (
-                      <div className="sehatsetu-msg-actions">
+                      <div className="repanatomy-msg-actions">
                         <button
                           type="button"
-                          className="sehatsetu-audio-btn"
+                          className="repanatomy-audio-btn"
                           onClick={() => handleSpeak(msg)}
                           title={isSpeaking && activeSpeechId === msg.id ? t.stopSpeaking : t.speakResponse}
                           aria-label={isSpeaking && activeSpeechId === msg.id ? t.stopSpeaking : t.speakResponse}
@@ -923,7 +923,7 @@ export default function MedicalReportExplorer({
 
             {/* Active Organ Context Banner */}
             {selectedOrganContext && (
-              <div className="sehatsetu-organ-context-banner">
+              <div className="repanatomy-organ-context-banner">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Sparkles size={13} className="text-amber-600 shrink-0" />
                   <span className="truncate">
@@ -933,7 +933,7 @@ export default function MedicalReportExplorer({
                 </div>
                 <button
                   type="button"
-                  className="sehatsetu-context-pill-btn"
+                  className="repanatomy-context-pill-btn"
                   onClick={() =>
                     void handleSendMessage(
                       selectedOrganContext.finding
@@ -948,10 +948,10 @@ export default function MedicalReportExplorer({
             )}
 
             {/* Input Bar */}
-            <div className="sehatsetu-chat-input-bar">
+            <div className="repanatomy-chat-input-bar">
               <input
                 type="text"
-                className="sehatsetu-chat-input"
+                className="repanatomy-chat-input"
                 placeholder={isListening ? t.listening : t.chatPlaceholder}
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
@@ -964,7 +964,7 @@ export default function MedicalReportExplorer({
               />
               <button
                 type="button"
-                className={`sehatsetu-icon-btn ${isListening ? "listening" : ""}`}
+                className={`repanatomy-icon-btn ${isListening ? "listening" : ""}`}
                 onClick={handleToggleVoice}
                 title={isListening ? "Stop listening" : t.voiceInput}
                 aria-label={isListening ? "Stop listening" : t.voiceInput}
@@ -973,7 +973,7 @@ export default function MedicalReportExplorer({
               </button>
               <button
                 type="button"
-                className="sehatsetu-icon-btn sehatsetu-send-btn"
+                className="repanatomy-icon-btn repanatomy-send-btn"
                 onClick={() => handleSendMessage()}
                 title={t.send}
                 aria-label={t.send}
@@ -990,7 +990,7 @@ export default function MedicalReportExplorer({
             <p className="report-upload-intro">{t.tagline}</p>
             {/* Drag & Drop Upload Zone */}
             <div
-              className={`sehatsetu-dropzone ${isDragging ? "dragging" : ""}`}
+              className={`repanatomy-dropzone ${isDragging ? "dragging" : ""}`}
               role="button"
               tabIndex={0}
               aria-label={t.uploadHeading}
@@ -1015,19 +1015,19 @@ export default function MedicalReportExplorer({
                 className="sr-only"
                 onChange={handleFileUpload}
               />
-              <div className="sehatsetu-dropzone-icon">
+              <div className="repanatomy-dropzone-icon">
                 <Upload size={20} />
               </div>
-              <div className="sehatsetu-dropzone-text">{t.uploadPrompt}</div>
-              <div className="sehatsetu-dropzone-sub">{t.uploadSubtext}</div>
+              <div className="repanatomy-dropzone-text">{t.uploadPrompt}</div>
+              <div className="repanatomy-dropzone-sub">{t.uploadSubtext}</div>
             </div>
 
             {/* Instant Sample Reports */}
-            <div className="sehatsetu-samples-section">
-              <div className="sehatsetu-section-label">{t.sampleReports}</div>
+            <div className="repanatomy-samples-section">
+              <div className="repanatomy-section-label">{t.sampleReports}</div>
               <button
                 type="button"
-                className="sehatsetu-sample-chip"
+                className="repanatomy-sample-chip"
                 onClick={() => handleLoadSample("abdomen")}
               >
                 <span>{t.sampleAbdomen}</span>
@@ -1035,7 +1035,7 @@ export default function MedicalReportExplorer({
               </button>
               <button
                 type="button"
-                className="sehatsetu-sample-chip"
+                className="repanatomy-sample-chip"
                 onClick={() => handleLoadSample("chest")}
               >
                 <span>{t.sampleChest}</span>
@@ -1043,7 +1043,7 @@ export default function MedicalReportExplorer({
               </button>
               <button
                 type="button"
-                className="sehatsetu-sample-chip"
+                className="repanatomy-sample-chip"
                 onClick={() => handleLoadSample("brain")}
               >
                 <span>{t.sampleBrain}</span>
@@ -1082,7 +1082,7 @@ export default function MedicalReportExplorer({
         )}
 
         {/* Educational Disclaimer */}
-        <footer className="sehatsetu-disclaimer">
+        <footer className="repanatomy-disclaimer">
           <HelpCircle size={14} className="shrink-0 text-slate-400 mt-0.5" />
           <span>{t.disclaimer}</span>
         </footer>

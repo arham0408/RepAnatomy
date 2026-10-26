@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "protocol_version": "2025-11-25",
+  "transport": "Streamable HTTP",
+  "tool_names": [
+    "ask_report",
+    "create_pairing",
+    "create_report",
+    "disconnect",
+    "focus_anatomy",
+    "get_report",
+    "get_viewer_state",
+    "join_pairing",
+    "prepare_questions"
+  ],
+  "checks": [
+    "protocol_negotiation_and_tool_discovery",
+    "report_evidence_answers_anatomy_and_doctor_prompts",
+    "single_use_pairing_shared_navigation_and_revocation",
+    "report_deletion"
+  ]
+}

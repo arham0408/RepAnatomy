@@ -191,7 +191,7 @@ export function ScopedChat({
     return (
         <button
           type="button"
-          className="sehatsetu-scoped-chat-launcher sehatsetu-focus-btn"
+          className="repanatomy-scoped-chat-launcher repanatomy-focus-btn"
           onClick={() => setOpen(true)}
         >
           <Bot size={12} />
@@ -201,9 +201,9 @@ export function ScopedChat({
   }
 
   return (
-    <div className={`sehatsetu-scoped-chat ${className ?? ""}`} data-context={contextKey}>
-      <div className="sehatsetu-scoped-chat-head">
-        <span className="sehatsetu-scoped-chat-title">
+    <div className={`repanatomy-scoped-chat ${className ?? ""}`} data-context={contextKey}>
+      <div className="repanatomy-scoped-chat-head">
+        <span className="repanatomy-scoped-chat-title">
           <Bot size={12} />
           <span>
             {scoped.contextType === "structure"
@@ -213,7 +213,7 @@ export function ScopedChat({
         </span>
         <button
           type="button"
-          className="sehatsetu-scoped-collapse"
+          className="repanatomy-scoped-collapse"
           onClick={() => {
             audioRef.current?.stopListening();
             setOpen(false);
@@ -226,7 +226,7 @@ export function ScopedChat({
 
       {onLanguageChange ? null : (
         <select
-          className="sehatsetu-scoped-lang"
+          className="repanatomy-scoped-lang"
           value={language}
           onChange={(e) => {
             audioRef.current?.stopListening();
@@ -243,14 +243,14 @@ export function ScopedChat({
       )}
 
       {messages.length > 0 && (
-        <div className="sehatsetu-scoped-stream">
+        <div className="repanatomy-scoped-stream">
           {messages.map((m) => (
-            <div key={m.id} className={`sehatsetu-scoped-msg ${m.sender}`}>
-              <p className="sehatsetu-scoped-text">{m.text}</p>
+            <div key={m.id} className={`repanatomy-scoped-msg ${m.sender}`}>
+              <p className="repanatomy-scoped-text">{m.text}</p>
               {m.sender === "assistant" && (
                 <button
                   type="button"
-                  className="sehatsetu-scoped-speak"
+                  className="repanatomy-scoped-speak"
                   onClick={() => handleSpeak(m)}
                   title={t.speakResponse}
                   aria-label={speakingId === m.id ? t.stopSpeaking : t.speakResponse}
@@ -263,10 +263,10 @@ export function ScopedChat({
         </div>
       )}
 
-      <form className="sehatsetu-scoped-input-row" onSubmit={handleSubmit}>
+      <form className="repanatomy-scoped-input-row" onSubmit={handleSubmit}>
         <input
           type="text"
-          className="sehatsetu-scoped-input"
+          className="repanatomy-scoped-input"
           value={input}
           placeholder={placeholder ?? t.listening}
           onChange={(e) => setInput(e.target.value)}
@@ -275,7 +275,7 @@ export function ScopedChat({
         />
         <button
           type="button"
-          className={`sehatsetu-scoped-mic ${isListening ? "listening" : ""}`}
+          className={`repanatomy-scoped-mic ${isListening ? "listening" : ""}`}
           onClick={handleToggleVoice}
           title={t.voiceInput}
           aria-label={t.voiceInput}
@@ -285,7 +285,7 @@ export function ScopedChat({
         </button>
         <button
           type="submit"
-          className="sehatsetu-scoped-send"
+          className="repanatomy-scoped-send"
           title={t.send}
           aria-label={t.send}
           disabled={pending || !input.trim()}

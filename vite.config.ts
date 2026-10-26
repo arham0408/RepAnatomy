@@ -16,11 +16,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/mcp': {
-        target: process.env.SEHATSETU_API_TARGET || 'http://127.0.0.1:8000',
+        target: process.env.REPANATOMY_API_TARGET || 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
       '/api': {
-        target: process.env.SEHATSETU_API_TARGET || 'http://127.0.0.1:8000',
+        target: process.env.REPANATOMY_API_TARGET || 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },

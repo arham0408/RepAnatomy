@@ -32,6 +32,18 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Prepare verified local pose assets
+        run: npm run prepare:pose
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install pinned backend
+        run: python -m pip install -r backend/requirements.lock.txt
+      - name: Check fitness and report backend
+        run: |
+          python -m unittest backend.test_fitness backend.test_mcp -v
+          python backend/test_backend.py
       - name: Check types
         run: npm run check
       - name: Lint source
@@ -46,7 +58,7 @@ jobs:
         shell: bash
         run: |
           status=$(curl --silent --show-error \
-            --output "$RUNNER_TEMP/sehatsetu-pages.json" \
+            --output "$RUNNER_TEMP/repanatomy-pages.json" \
             --write-out '%{http_code}' \
             --header "Authorization: Bearer $GH_TOKEN" \
             --header 'Accept: application/vnd.github+json' \
@@ -71,6 +83,8 @@ jobs:
         uses: actions/configure-pages@v6
       - name: Install Chromium for runtime checks
         run: npx playwright install --with-deps chromium
+      - name: Check Gym Studio and actual pose runtime
+        run: npm run test:fitness:browser -- --output=test-results/fitness
       - name: Check viewer lifecycle and usability
         id: runtime
         run: npm run test:browser -- --project=chromium --max-failures=1

@@ -15,7 +15,7 @@ export class MedicalAnatomyController {
   private activeTargetIds: string[] = [];
 
   /**
-   * Captures the initial state of the 3D viewer when entering SehatSetu report explorer.
+   * Captures the initial state of the 3D viewer when entering RepAnatomy report explorer.
    */
   public captureBaseline(state: SceneState): void {
     if (!this.baseline) {

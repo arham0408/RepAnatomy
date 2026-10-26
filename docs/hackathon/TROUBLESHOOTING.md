@@ -42,17 +42,17 @@ python -m uvicorn backend.main:app --host 127.0.0.1 --port 8010
 Before launching Vite, set its backend target in that terminal. On PowerShell:
 
 ```powershell
-$env:SEHATSETU_API_TARGET = "http://127.0.0.1:8010"
+$env:REPANATOMY_API_TARGET = "http://127.0.0.1:8010"
 npm run dev
 ```
 
 On macOS/Linux:
 
 ```sh
-SEHATSETU_API_TARGET=http://127.0.0.1:8010 npm run dev
+REPANATOMY_API_TARGET=http://127.0.0.1:8010 npm run dev
 ```
 
-Then check the SDK client with `python -m backend.smoke_mcp http://127.0.0.1:8010/mcp`. Keep the frontend on 3016 for the default origin allowlist. If you deliberately change its origin, add the exact origin to `SEHATSETU_ALLOWED_ORIGINS` and restart the backend; see [the environment example](../../backend/.env.example).
+Then check the SDK client with `python -m backend.smoke_mcp http://127.0.0.1:8010/mcp`. Keep the frontend on 3016 for the default origin allowlist. If you deliberately change its origin, add the exact origin to `REPANATOMY_ALLOWED_ORIGINS` and restart the backend; see [the environment example](../../backend/.env.example).
 
 ## Test runner notes
 

@@ -1,19 +1,22 @@
 import {
-  ArrowRight, ArrowUpRight, BookOpen, Bookmark, Brain, ChevronRight,
-  FileHeart, HeartPulse, LayoutGrid, Lightbulb, MousePointer2,
-  ScanLine, ShieldCheck, Sparkles, Stethoscope, Wind,
+  ArrowUpRight, Bookmark, Brain, ChevronRight, PanelLeft,
+  FileHeart, HeartPulse, Home, MousePointer2, Ruler, ShieldCheck,
+  ScanLine, Layers3, Wind, Globe2, Dumbbell,
 } from "lucide-react";
 import { APP_VERSION } from "./version";
+import type { ReactNode } from "react";
 
 interface Props {
   pieces: number;
   systems: number;
-  model: "male" | "female";
   ready: boolean;
   online: boolean;
   reportOpen: boolean;
   savedOpen: boolean;
   hideGuide: boolean;
+  sidebarContent: ReactNode;
+  sidebarExpanded: boolean;
+  onSidebarExpandedChange: (expanded: boolean) => void;
   onHome: () => void;
   onReport: () => void;
   onSaved: () => void;
@@ -22,77 +25,77 @@ interface Props {
 }
 
 export default function StudioDashboard({
-  pieces, systems, model, ready, online, reportOpen, savedOpen, hideGuide,
+  pieces, systems, ready, online, reportOpen, savedOpen, hideGuide,
   onHome, onReport, onSaved, onAbout, onExplore,
+  sidebarContent, sidebarExpanded, onSidebarExpandedChange,
 }: Props) {
   return (
     <>
-      <div className="sidebar-surface" aria-hidden="true" />
+      <aside className="workspace-sidebar" aria-label="Workspace sidebar" data-expanded={sidebarExpanded}
+        onPointerEnter={(event) => { if (event.pointerType === "mouse") onSidebarExpandedChange(true); }}
+        onPointerLeave={(event) => { if (event.pointerType === "mouse") onSidebarExpandedChange(false); }}
+        onFocusCapture={(event) => { if (event.target.matches(":focus-visible")) onSidebarExpandedChange(true); }}
+        onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget) && !event.currentTarget.matches(":hover")) onSidebarExpandedChange(false); }}
+        onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.querySelector<HTMLButtonElement>(".sidebar-brand")?.focus(); onSidebarExpandedChange(false); } }}>
+      <button className="sidebar-brand" aria-label={sidebarExpanded ? "Collapse navigation" : "Expand navigation"} aria-expanded={sidebarExpanded} onClick={() => onSidebarExpandedChange(!sidebarExpanded)} title="Hover to explore navigation">
+        <span className="sidebar-monogram" aria-hidden="true">R</span>
+        <span className="sidebar-label sidebar-wordmark">RepAnatomy<small>Your body, better understood.</small></span>
+        <PanelLeft size={16} className="sidebar-label sidebar-fold" />
+      </button>
       <nav className="workspace-nav" aria-label="Workspace navigation">
-        <span className="nav-caption">YOUR WORKSPACE</span>
-        <button className={!reportOpen && !savedOpen ? "nav-item selected" : "nav-item"} onClick={onHome} aria-current={!reportOpen && !savedOpen ? "page" : undefined}>
-          <LayoutGrid size={18} /><span>Anatomy explorer</span><ChevronRight size={15} />
+        <span className="nav-caption sidebar-label">YOUR WORKSPACE</span>
+        <a href="?gym=1" className="nav-item" aria-label="Gym Studio" title="Gym Studio"><Dumbbell size={19}/><span className="sidebar-label">Gym Studio<small>Movement, understood</small></span></a>
+        <button aria-label="Anatomy atlas" title="Anatomy atlas" className={`nav-item ${!reportOpen && !savedOpen ? "selected" : ""}`} onClick={onHome} aria-current={!reportOpen && !savedOpen ? "page" : undefined}>
+          <Home size={19} /><span className="sidebar-label">Anatomy atlas<small>Explore the human body</small></span>
         </button>
-        <button className={`nav-item ${reportOpen ? "selected" : ""}`} onClick={onReport} aria-current={reportOpen ? "page" : undefined}>
-          <FileHeart size={18} /><span>Report explorer</span><span className="nav-new">NEW</span>
+        <button aria-label="Report explorer" title="Report explorer" className={`nav-item ${reportOpen ? "selected" : ""}`} onClick={onReport} aria-current={reportOpen ? "page" : undefined}>
+          <FileHeart size={19} /><span className="sidebar-label">Report explorer<small>Make the connections</small></span>
         </button>
-        <button className={`nav-item ${savedOpen ? "selected" : ""}`} onClick={onSaved}>
-          <Bookmark size={18} /><span>Saved views</span>
+        <button aria-label="Saved views" title="Saved views" className={`nav-item ${savedOpen ? "selected" : ""}`} onClick={onSaved} aria-current={savedOpen ? "page" : undefined}>
+          <Bookmark size={19} /><span className="sidebar-label">Saved views<small>Your personal collection</small></span>
         </button>
       </nav>
-
+      <div className="sidebar-systems">{sidebarContent}</div>
       <div className="sidebar-bottom">
-        <div className="learning-note"><span className="learning-icon"><BookOpen size={17} /></span><div><strong>A little more understanding.</strong><p>Explore freely. Learn at your pace.</p></div></div>
-        <button className="sidebar-about" onClick={onAbout}><ShieldCheck size={15} /><span>About the atlas & sources</span><ArrowUpRight size={14} /></button>
-        <div className="workspace-status"><span className={online ? "connection-dot" : "connection-dot offline"} />{online ? "Your exploration starts here" : "Exploring offline"}<span>v{APP_VERSION}</span></div>
+        <button className="sidebar-about" aria-label="Sources and credits" title="Sources and credits" onClick={onAbout}><ShieldCheck size={18} /><span className="sidebar-label">Sources & credits</span><ArrowUpRight size={13} className="sidebar-label" /></button>
+        <div className="workspace-status"><span className={online ? "connection-dot" : "connection-dot offline"} /><span className="sidebar-label">{online ? "Ready to explore" : "Exploring offline"}</span><span className="sidebar-label">v{APP_VERSION}</span></div>
       </div>
-
-      <div className="workspace-bar"><span>Workspace</span><ChevronRight size={13} /><strong>{reportOpen ? "Report explorer" : "Anatomy explorer"}</strong></div>
-      <section className="workspace-intro" aria-label="Welcome to your anatomy workspace">
-        <div className="intro-eyebrow"><span />THE WONDER WITHIN</div>
-        <h2>Meet your body. <em>Make the connections.</em></h2>
-        <p>Explore human anatomy, understand your reports, and see the bigger picture.</p>
-      </section>
-      <div className="workspace-stats" aria-label="Atlas at a glance">
-        <div><strong>{pieces.toLocaleString()}</strong><span>3D structures</span></div>
-        <div><strong>{systems}</strong><span>body systems</span></div>
-        <div><strong>8</strong><span>languages</span></div>
-      </div>
-
-      <div className="canvas-heading">
-        <div><ScanLine size={18} /><strong>Human anatomy</strong><span className="canvas-live"><span />{ready ? "INTERACTIVE 3D" : "LOADING MODEL"}</span></div>
-        <p>One body. Thousands of connections.</p>
-      </div>
-      <div className="canvas-caption"><span className="model-indicator" />{model === "male" ? "Male reference model" : "Female reference · Experimental"}<span className="caption-divider" />{pieces.toLocaleString()} modeled pieces</div>
-      <div className="canvas-hint"><MousePointer2 size={13} /> Select a structure to discover more</div>
-
+      </aside>
+      <div className="canvas-heading"><ScanLine size={15} /><span>{ready ? "THE INTERACTIVE ANATOMY ATLAS" : "PREPARING YOUR ATLAS"}</span></div>
+      <div className="canvas-hint"><MousePointer2 size={14} />Drag to turn · scroll to zoom</div>
       {!hideGuide && (
         <aside className="discovery-rail" aria-label="Discover more">
-          <section className="report-invitation">
-            <div className="report-orbit" aria-hidden="true"><Stethoscope size={68} strokeWidth={1} /></div>
-            <div className="invitation-eyebrow"><Sparkles size={13} /> A LITTLE CLARITY GOES A LONG WAY</div>
-            <span className="report-card-icon"><FileHeart size={23} strokeWidth={1.5} /></span>
-            <h3>Your report.<br />A clearer picture.</h3>
-            <p>Turn medical terms into understanding. See findings connected to your anatomy.</p>
-            <button className="report-cta" onClick={onReport}>Explore a report <ArrowRight size={16} /></button>
-            <div className="report-card-foot">PDF reports <span>·</span> 8 Indian languages</div>
-          </section>
-
-          <section className="quick-discover">
-            <div className="discover-heading"><h3>Start with a little curiosity</h3><span>01—03</span></div>
-            <p>A few remarkable places to explore.</p>
-            {[
-              { name: "Heart", query: "heart", description: "The rhythm of your body", Icon: HeartPulse, tone: "rose" },
-              { name: "Brain", query: "brain", description: "Your body's command center", Icon: Brain, tone: "ochre" },
-              { name: "Lungs", query: "lung", description: "Room for every breath", Icon: Wind, tone: "teal" },
-            ].map(({ name, query, description, Icon, tone }) => (
-              <button className="discover-structure" key={name} onClick={() => onExplore(query)} disabled={!ready}>
-                <span className={`discovery-icon ${tone}`}><Icon size={22} strokeWidth={1.5} /></span>
-                <span><strong>{name}</strong><small>{description}</small></span><ArrowUpRight size={16} />
-              </button>
-            ))}
-          </section>
-          <div className="exploration-tip"><Lightbulb size={17} /><p><strong>Look beneath the surface.</strong> Switch off a body system to uncover what lies underneath.</p></div>
+          <article className="atlas-guide">
+            <span className="intro-eyebrow">HUMAN ANATOMY</span>
+            <h2>The human<br /> <em>body.</em></h2>
+            <div className="guide-tags"><span>Connected</span><span>Complex</span><span>Remarkable</span></div>
+            <p className="guide-description">An extraordinary world, beneath the surface. Explore the structures that move you, sustain you, and make you who you are — one discovery at a time.</p>
+            <h3>At a glance</h3>
+            <dl className="guide-traits">
+              <div><Layers3 size={17} /><dt>Systems</dt><dd>{systems} to explore</dd></div>
+              <div><Ruler size={17} /><dt>Structures</dt><dd>{pieces.toLocaleString()} modeled pieces</dd></div>
+              <div><Globe2 size={17} /><dt>Languages</dt><dd>8 Indian languages</dd></div>
+              <div><ScanLine size={17} /><dt>Perspective</dt><dd>Every angle, in 3D</dd></div>
+            </dl>
+            <h3>Follow your curiosity</h3>
+            <div className="quick-discover">
+              {[
+                { name: "Heart", query: "heart", description: "The rhythm within", Icon: HeartPulse, tone: "rose" },
+                { name: "Brain", query: "brain", description: "A world of connections", Icon: Brain, tone: "ochre" },
+                { name: "Lungs", query: "lung", description: "Room for every breath", Icon: Wind, tone: "teal" },
+              ].map(({ name, query, description, Icon, tone }) => (
+                <button className="discover-structure" key={name} onClick={() => onExplore(query)} disabled={!ready}>
+                  <span className={`discovery-icon ${tone}`}><Icon size={21} strokeWidth={1.5} /></span>
+                  <span><strong>{name}</strong><small>{description}</small></span><ArrowUpRight size={16} />
+                </button>
+              ))}
+            </div>
+            <button className="report-invitation" onClick={onReport}>
+              <span className="report-card-icon"><FileHeart size={27} strokeWidth={1.3} /></span>
+              <span><strong>Your report, made clearer.</strong><small>Connect findings to your anatomy.</small></span><ChevronRight size={17} />
+            </button>
+            <p className="guide-footnote">Made for learning. Always keep your clinician in the conversation.</p>
+          </article>
         </aside>
       )}
     </>

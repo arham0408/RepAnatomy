@@ -111,6 +111,8 @@ test('idle, hidden and empty scenes stop drawing and wake on interaction', async
   await page.evaluate(() => { delete document.hidden; document.dispatchEvent(new Event('visibilitychange')); });
   const resumed = await page.evaluate(() => window.__renderAudit.draws);
   await expect.poll(() => page.evaluate(() => window.__renderAudit.draws)).toBeGreaterThan(resumed);
+  await page.locator('.bottom-dock').hover();
+  await page.getByRole('button', { name: 'Open system layers', exact: true }).click();
   await page.getByRole('button', { name: 'Hide all', exact: true }).click();
   await assertIdle(page);
 });
@@ -176,13 +178,14 @@ test('phone and desktop search, inspection, layers and pixel budget remain usabl
     await page.getByRole('button', { name: 'Show surrounding anatomy', exact: true }).click();
     await page.locator('.detail-sheet').getByRole('button', { name: 'Close', exact: true }).click();
     const browse = page.getByRole('button', { name: 'Browse body surface structures', exact: true });
-    if (!await browse.isVisible()) await page.getByRole('button', { name: /Open system layers|Pin systems panel/ }).click();
+    if (!await browse.isVisible()) { await page.locator('.bottom-dock').hover(); await page.getByRole('button', { name: /Open system layers|Pin systems panel/ }).click(); }
     if (await browse.getAttribute('aria-expanded') !== 'true') await browse.click();
     const opacity = page.getByRole('slider', { name: 'Body surface opacity', exact: true });
     await opacity.focus();
     await opacity.press('ArrowRight');
     await expect(opacity).toHaveAttribute('aria-valuenow', '25');
     await page.getByRole('button', { name: 'Close systems', exact: true }).click();
+    await page.locator('.bottom-dock').hover();
     await page.getByRole('button', { name: 'Assemble and reset', exact: true }).click();
     const pixels = await page.locator('canvas').evaluate(c => c.width * c.height);
     expect(pixels).toBeLessThanOrEqual(4_000_000);
@@ -220,7 +223,7 @@ test('both saved models reopen when the origin server is unavailable', async ({ 
     const page = await context.newPage();
     await page.goto('./');
     await ready(page);
-    await page.getByRole('button', { name: 'About the atlas & sources', exact: true }).click();
+    await page.getByRole('button', { name: 'Sources and credits', exact: true }).click();
     await expect(page.locator('.pwa-offline')).toContainText('Ready offline', { timeout: 90_000 });
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
     await stop();
@@ -230,7 +233,7 @@ test('both saved models reopen when the origin server is unavailable', async ({ 
     await ready(page);
     await page.locator('.model-option[title^="Female model"]').click();
     await ready(page);
-    await expect(page.getByLabel('Atlas at a glance').getByText('2,456', { exact: true })).toBeVisible();
+    await expect(page.locator('.guide-traits').getByText('2,456 modeled pieces', { exact: true })).toBeVisible();
     await expect(page.getByRole('alert')).toHaveCount(0);
   } finally {
     await context.close();

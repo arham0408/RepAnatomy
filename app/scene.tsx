@@ -17,10 +17,17 @@ import { anchorPan } from "./anchored-pan";
 import { createFrameScheduler } from "./frame-scheduler";
 import { scenePixelRatio } from "./render-budget";
 import { DEFAULT_ROTATION_SPEED, MIN_ROTATION_SPEED, MAX_ROTATION_SPEED, SYSTEMS, type Atlas, type SceneState, type CameraPose } from "./anatomy";
+export interface ViewerAction {
+  type: "zoom-in" | "zoom-out" | "turn-left" | "turn-right";
+  id: number;
+}
 interface Props {
   atlas: Atlas;
   backgroundColor: string;
   state: SceneState;
+  action: ViewerAction | null;
+  dusk: boolean;
+  onReset: () => void;
   onSelect: (id: string) => void;
   onProgress: (n: number) => void;
   onError: (s: string) => void;
@@ -30,6 +37,9 @@ export default function AnatomyScene({
   atlas,
   backgroundColor,
   state,
+  action,
+  dusk,
+  onReset,
   onSelect,
   onProgress,
   onError,
@@ -39,6 +49,9 @@ export default function AnatomyScene({
     latest = useRef(state),
     select = useRef(onSelect),
     cameraChanged = useRef(onCameraChange),
+    resetView = useRef(onReset),
+    runAction = useRef<(type: ViewerAction["type"]) => void>(() => {}),
+    setLighting = useRef<(dusk: boolean) => void>(() => {}),
     changeBackground = useRef<(color: string) => void>(() => {}),
     wake = useRef<() => void>(() => {});
   useEffect(() => {
@@ -47,7 +60,12 @@ export default function AnatomyScene({
   useEffect(() => {
     changeBackground.current(backgroundColor);
   }, [backgroundColor]);
+  useEffect(() => {
+    if (action) runAction.current(action.type);
+  }, [action]);
+  useEffect(() => { setLighting.current(dusk); }, [dusk, atlas]);
   latest.current = state;
+  resetView.current = onReset;
   select.current = onSelect;
   cameraChanged.current = onCameraChange;
   // OrbitControls removes its document listeners via canvas.getRootNode().
@@ -97,9 +115,10 @@ export default function AnatomyScene({
     renderer.toneMapping = T.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.12;
     el.appendChild(renderer.domElement);
+    renderer.domElement.tabIndex = 0;
     renderer.domElement.setAttribute(
       "aria-label",
-      "Interactive human anatomy. Drag to orbit, pinch or scroll to zoom, and tap a structure to inspect it.",
+      "Interactive human anatomy. Drag to orbit, pinch or scroll to zoom, and tap a structure to inspect it. Double-click or press 0 to reset. Arrow keys turn the model; plus and minus zoom.",
     );
     const scene = new T.Scene(),
       camera = new T.PerspectiveCamera(34, 1, 0.005, 100),
@@ -136,6 +155,44 @@ export default function AnatomyScene({
     controls.addEventListener("end", () => {
       requestFrame();
     });
+    const turn = (yaw: number, pitch = 0) => {
+      if (!ready) return;
+      cameraTransition = null;
+      const offset = camera.position.clone().sub(controls.target);
+      const spherical = new T.Spherical().setFromVector3(offset);
+      spherical.theta += yaw;
+      spherical.phi = T.MathUtils.clamp(spherical.phi + pitch, .05, Math.PI * .96);
+      camera.position.copy(controls.target).add(offset.setFromSpherical(spherical));
+      controls.update();
+      dirty = true;
+      requestFrame();
+    };
+    runAction.current = (type) => {
+      if (!ready) return;
+      if (type === "turn-left" || type === "turn-right") {
+        turn(type === "turn-left" ? -Math.PI / 2 : Math.PI / 2);
+        return;
+      }
+      cameraTransition = null;
+      const offset = camera.position.clone().sub(controls.target);
+      const distance = T.MathUtils.clamp(offset.length() * (type === "zoom-in" ? 1 / 1.35 : 1.35), controls.minDistance, controls.maxDistance);
+      camera.position.copy(controls.target).add(offset.setLength(distance));
+      controls.update();
+      dirty = true;
+      requestFrame();
+    };
+    const keyboard = (event: KeyboardEvent) => {
+      const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "+", "=", "-", "0"];
+      if (!keys.includes(event.key)) return;
+      event.preventDefault();
+      if (event.key === "0") resetView.current();
+      else if (event.key === "+" || event.key === "=") runAction.current("zoom-in");
+      else if (event.key === "-") runAction.current("zoom-out");
+      else turn(event.key === "ArrowLeft" ? -.18 : event.key === "ArrowRight" ? .18 : 0, event.key === "ArrowUp" ? -.18 : event.key === "ArrowDown" ? .18 : 0);
+    };
+    const doubleClick = () => resetView.current();
+    renderer.domElement.addEventListener("keydown", keyboard);
+    renderer.domElement.addEventListener("dblclick", doubleClick);
     const pmrem = new T.PMREMGenerator(renderer),
       room = new RoomEnvironment(),
       env = pmrem.fromScene(room, 0.04);
@@ -149,6 +206,16 @@ export default function AnatomyScene({
     const rim = new T.DirectionalLight(0xe9f0ff, 1.8);
     rim.position.set(2, 2, -3);
     scene.add(rim);
+    setLighting.current = (isDusk) => {
+      scene.environmentIntensity = isDusk ? .28 : .95;
+      key.color.set(isDusk ? "#ffc98a" : "#fff4e2");
+      key.intensity = isDusk ? 2.6 : 2.3;
+      rim.intensity = isDusk ? 1.9 : 1.8;
+      renderer.toneMappingExposure = isDusk ? 1 : 1.12;
+      dirty = true;
+      requestFrame();
+    };
+    setLighting.current(dusk);
     // Share the same lighting with the selected anatomy's separate depth pass.
     scene.traverse((object) => {
       if (object instanceof T.Light) object.layers.enable(1);
@@ -177,6 +244,14 @@ export default function AnatomyScene({
             new T.Vector3().fromArray(p.bounds[1]),
           ),
       );
+    const bodyBounds = new T.Box3();
+    bounds.forEach((box) => bodyBounds.union(box));
+    const bodyCenter = bodyBounds.getCenter(new T.Vector3());
+    const bodyCorners: T.Vector3[] = [];
+    for (const x of [bodyBounds.min.x, bodyBounds.max.x])
+      for (const y of [bodyBounds.min.y, bodyBounds.max.y])
+        for (const z of [bodyBounds.min.z, bodyBounds.max.z])
+          bodyCorners.push(new T.Vector3(x, y, z).sub(bodyCenter));
     const contextHighlight = new T.Group();
     const contextHighlightMaterials = new Map<string, T.MeshStandardMaterial>();
     scene.add(contextHighlight);
@@ -366,16 +441,16 @@ export default function AnatomyScene({
       const rail = document.querySelector(".viewer-controls")?.getBoundingClientRect();
       const compact = window.innerWidth < 768;
       const landscape = window.innerWidth > window.innerHeight && window.innerHeight <= 600;
-      // The canvas now owns its viewport. Reserve only the controls inside it,
-      // rather than subtracting the surrounding workspace a second time.
-      const sideGap = !landscape && rail && rail.left < rect.right
-        ? rect.right - rail.left + 16
-        : 24;
+      // Reserve the edge occupied by the rail. The atlas shell places it on
+      // the left, while compact camera presets can also occupy the right.
+      const overlaps = rail && rail.right > rect.left && rail.left < rect.right;
+      const leftRail = overlaps && rail.left < rect.left + rect.width / 2;
+      const rightRail = overlaps && !leftRail;
       return {
-        left: compact ? 18 : 28,
-        right: el.clientWidth - sideGap,
-        top: landscape ? 58 : compact ? 48 : 64,
-        bottom: el.clientHeight - (landscape ? 35 : 66),
+        left: leftRail ? rail.right - rect.left + 18 : 24,
+        right: rightRail ? rail.left - rect.left - 18 : el.clientWidth - (compact && !landscape ? 42 : 24),
+        top: 16,
+        bottom: el.clientHeight - 20,
       };
     };
     const fit = (view: string, extent = 0, transitionTime?: number) => {
@@ -383,8 +458,19 @@ export default function AnatomyScene({
       const frame = desktopFrame();
       const frameHeight = Math.max(60, frame.bottom - frame.top);
       const frameWidth = Math.max(100, frame.right - frame.left);
-      const normalDistance = (Math.max(1.8 * el.clientHeight / frameHeight, .85 * el.clientHeight / frameWidth) /
-        (2 * Math.tan(T.MathUtils.degToRad(camera.fov / 2)))) * .96;
+      if (extent > 0.8) view = "front";
+      const direction = viewDirection(view);
+      const horizontal = new T.Vector3().crossVectors(camera.up, direction).normalize();
+      const vertical = new T.Vector3().crossVectors(direction, horizontal).normalize();
+      const tangent = Math.tan(T.MathUtils.degToRad(camera.fov / 2));
+      // Fit the actual head-to-toe bounds, including perspective depth, inside
+      // the usable stage. Both reference models keep a small breathing margin.
+      const normalDistance = Math.max(...bodyCorners.map((corner) =>
+        corner.dot(direction) + Math.max(
+          Math.abs(corner.dot(horizontal)) / (tangent * camera.aspect * frameWidth / el.clientWidth),
+          Math.abs(corner.dot(vertical)) / (tangent * frameHeight / el.clientHeight),
+        ),
+      )) * 1.08;
       const packingFrame = frame;
       const reservedHeight = packingFrame
         ? el.clientHeight - (packingFrame.bottom - packingFrame.top)
@@ -399,13 +485,7 @@ export default function AnatomyScene({
         (el.clientHeight / Math.max(160, el.clientHeight - reservedHeight)) *
         1.08;
       const distance = T.MathUtils.lerp(normalDistance, Math.max(0.2, atlasDistance), extent);
-      if (extent > 0.8) view = "front";
-      const direction = viewDirection(view);
-      const center = new T.Vector3(
-        0,
-        0.85,
-        0,
-      );
+      const center = bodyCenter.clone().lerp(new T.Vector3(0, .85, 0), extent);
       const destinationOffset = packingFrame ? new T.Vector2(
         el.clientWidth / 2 - (packingFrame.left + packingFrame.right) / 2,
         el.clientHeight / 2 - (packingFrame.top + packingFrame.bottom) / 2,
@@ -802,7 +882,7 @@ export default function AnatomyScene({
       controls.touches.ONE = amount < 0.8 ? T.TOUCH.ROTATE : T.TOUCH.PAN;
       markers.visible = amount > 0.75;
       // Selected anatomy shows with warm yellow highlight and persists across normal, exploded, and isolated states.
-      // pinnedHighlight (from SehatSetu) is shown alongside selected, allowing both to coexist.
+      // pinnedHighlight (from RepAnatomy) is shown alongside selected, allowing both to coexist.
       const pinnedIds = s.pinnedHighlight ?? [];
       const combinedHighlightIds = [...new Set([...s.selected, ...pinnedIds])];
       const highlightKey =
@@ -997,6 +1077,8 @@ export default function AnatomyScene({
       document.removeEventListener("visibilitychange", visibilityChanged);
       wake.current = () => {};
       changeBackground.current = () => {};
+      runAction.current = () => {};
+      setLighting.current = () => {};
       observer.disconnect();
       renderer.domElement.removeEventListener("webglcontextlost", contextLost);
       renderer.domElement.removeEventListener("pointerdown", down);
@@ -1004,6 +1086,8 @@ export default function AnatomyScene({
       renderer.domElement.removeEventListener("pointerup", up);
       renderer.domElement.removeEventListener("pointercancel", cancel);
       renderer.domElement.removeEventListener("wheel", wheel, true);
+      renderer.domElement.removeEventListener("keydown", keyboard);
+      renderer.domElement.removeEventListener("dblclick", doubleClick);
       releaseAnchoredPan();
       controls.dispose();
       geometries.forEach((g) => g.dispose());

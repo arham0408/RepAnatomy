@@ -18,7 +18,7 @@ The [sanitized protocol evidence](evidence/mcp-verification.json) contains actua
 
 ## Video review
 
-The [YouTube page](https://www.youtube.com/watch?v=teRzrT49HVo) resolves to **SehatSetu — Making Medical Reports Understandable Through AI & 3D Anatomy**, channel **Anju Singh**. Page metadata and the project description are readable. Automated playback encountered **Sign in to confirm you're not a bot**, and local browser use was disabled during the attempted review. No actual footage or audio was observed in that attempt.
+The [YouTube page](https://www.youtube.com/watch?v=teRzrT49HVo) resolves to **RepAnatomy — Making Medical Reports Understandable Through AI & 3D Anatomy**, channel **Anju Singh**. Page metadata and the project description are readable. Automated playback encountered **Sign in to confirm you're not a bot**, and local browser use was disabled during the attempted review. No actual footage or audio was observed in that attempt.
 
 Therefore duration under three minutes, narration language, and visible MCP/voice actions remain manual video checks. The application's working behavior was checked separately through the live backend and browser automation. A bot check does not establish that the video fails to play in a normal signed-in browser.
 

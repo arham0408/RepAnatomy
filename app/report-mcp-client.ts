@@ -40,7 +40,7 @@ export class ReportMcpClient {
   connect(): Promise<void> {
     if (!this.ready) this.ready = (async () => {
       const initialized = await this.request("initialize", { protocolVersion: MCP_VERSION,
-        capabilities: {}, clientInfo: { name: "sehatsetu-web-simulator", version: "1.0.0" } }) as { protocolVersion: string };
+        capabilities: {}, clientInfo: { name: "repanatomy-web-simulator", version: "1.0.0" } }) as { protocolVersion: string };
       if (initialized.protocolVersion !== MCP_VERSION) throw new Error("Server did not negotiate MCP 2025-11-25.");
       await this.request("notifications/initialized", {}, true);
       await this.request("tools/list", {});

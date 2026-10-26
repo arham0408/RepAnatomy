@@ -1,6 +1,6 @@
-# SehatSetu demo walkthrough
+# RepAnatomy demo walkthrough
 
-Reproducible demonstration of SehatSetu's report-to-conversation workflow. This walkthrough is separate from a transcript of the linked video.
+Reproducible demonstration of RepAnatomy's report-to-conversation workflow. This walkthrough is separate from a transcript of the linked video.
 
 **[Watch the team-provided video](https://www.youtube.com/watch?v=teRzrT49HVo)** · [Five-minute judge's guide](JUDGE_GUIDE.md) · [Architecture](TECHNICAL_REVIEW.md)
 
@@ -21,7 +21,7 @@ With a functioning Groq key, select Hindi or another supported language to demon
 
 ## Check earlier footage against actual behavior
 
-The team's video URL is linked above. Its visible title is **SehatSetu — Making Medical Reports Understandable Through AI & 3D Anatomy**, on **Anju Singh**'s channel. YouTube blocked automated playback with **Sign in to confirm you're not a bot**. Footage, narration language, and duration could therefore not be independently checked. This playback barrier does not establish that the video is broken for viewers using their own browser. Apply these checks when watching it:
+The team's video URL is linked above. Its visible title is **RepAnatomy — Making Medical Reports Understandable Through AI & 3D Anatomy**, on **Anju Singh**'s channel. YouTube blocked automated playback with **Sign in to confirm you're not a bot**. Footage, narration language, and duration could therefore not be independently checked. This playback barrier does not establish that the video is broken for viewers using their own browser. Apply these checks when watching it:
 
 | Claim or scene | Accurate current description |
 | --- | --- |

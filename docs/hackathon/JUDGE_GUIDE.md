@@ -1,6 +1,6 @@
 # Five-minute judge's guide
 
-**SehatSetu turns a report into a voice-and-screen conversation:** ask about a report phrase, compare the original evidence, and see the associated reference anatomy. The Alexa+ track is demonstrated through a labeled web simulator and a real MCP server.
+**RepAnatomy turns a report into a voice-and-screen conversation:** ask about a report phrase, compare the original evidence, and see the associated reference anatomy. The Alexa+ track is demonstrated through a labeled web simulator and a real MCP server.
 
 [Team demo video](https://www.youtube.com/watch?v=teRzrT49HVo) · [Architecture](TECHNICAL_REVIEW.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Review checklist](SUBMISSION_STATUS.md)
 
