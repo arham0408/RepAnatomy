@@ -24,12 +24,19 @@ interface Plan {
   rest_days?:string[]; meals:string[]; nutrition_note?:string; nutrition_source?:string;
 }
 const API = '/api/fitness';
-async function request<T>(path:string, body?:unknown, method = body === undefined ? 'GET' : 'POST'):Promise<T> {
-  const options:RequestInit={method,signal:AbortSignal.timeout(15000)};
+async function request<T>(path:string, body?:unknown, method = body === undefined ? 'GET' : 'POST', signal?:AbortSignal):Promise<T> {
+  const options:RequestInit={method,signal:signal?AbortSignal.any([signal,AbortSignal.timeout(15000)]):AbortSignal.timeout(15000)};
   if(body!==undefined){options.headers={'Content-Type':'application/json'};options.body=JSON.stringify(body);}
   const response = await fetch(API+path,options);
   if(!response.ok) { const error = await response.json().catch(()=>({})); throw new Error(typeof error.detail === 'string' ? error.detail : `Request failed (${response.status}). Check the backend and your input.`); }
   return response.status===204 ? undefined as T : response.json();
+}
+// Encode away from the synchronous preview/pose path. Only sampled frames are encoded.
+async function frameImage(surface:HTMLCanvasElement):Promise<string> {
+  const blob=await new Promise<Blob>((resolve,reject)=>surface.toBlob(value=>value?resolve(value):reject(new Error('Could not encode camera frame.')),'image/jpeg',.75));
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();reader.onload=()=>resolve(reader.result as string);reader.onerror=()=>reject(new Error('Could not read camera frame.'));reader.readAsDataURL(blob);
+  });
 }
 function download(value:unknown, name:string) {
   const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));
@@ -43,6 +50,7 @@ export default function FitnessStudio() {
   const [atlasReady,setAtlasReady]=useState(false);
   const [muscleQuery,setMuscleQuery]=useState('rectus femoris');
   const [running,setRunning]=useState(false), [starting,setStarting]=useState(false);
+  const [preview,setPreview]=useState(false);
   const [consent,setConsent]=useState(false), [error,setError]=useState('');
   const [result,setResult]=useState<Result|null>(null), [plan,setPlan]=useState<Plan|null>(null);
   const [approved,setApproved]=useState(false), [busy,setBusy]=useState(false);
@@ -53,6 +61,7 @@ export default function FitnessStudio() {
   const canvas=useRef<HTMLCanvasElement>(null), video=useRef<HTMLVideoElement>(null);
   const session=useRef(''), stream=useRef<MediaStream|null>(null), worker=useRef<Worker|null>(null);
   const generation=useRef(0), timer=useRef<ReturnType<typeof setTimeout>|null>(null), videoUrl=useRef('');
+  const captureRequest=useRef<AbortController|null>(null);
   const pain=useRef(false), lastResult=useRef<Result|null>(null);
   const mainContent=useRef<HTMLDivElement>(null);
   useEffect(()=>{mainContent.current?.scrollTo({top:0});},[tab]);
@@ -61,19 +70,25 @@ export default function FitnessStudio() {
   const active=running||starting;
   const stop=() => {
     generation.current++;
+    captureRequest.current?.abort();captureRequest.current=null;
     window.speechSynthesis?.cancel();
     if(timer.current) clearTimeout(timer.current);
     stream.current?.getTracks().forEach(track=>track.stop());stream.current=null;
     worker.current?.terminate();worker.current=null;
-    if(video.current){video.current.pause();video.current.srcObject=null;video.current.removeAttribute('src');video.current.load();}
+    if(video.current){
+      // Preserve the final preview when capture stops.
+      if(video.current.readyState>=2&&canvas.current)canvas.current.getContext('2d')?.drawImage(video.current,0,0,canvas.current.width,canvas.current.height);
+      video.current.pause();video.current.srcObject=null;video.current.removeAttribute('src');video.current.load();
+    }
     if(videoUrl.current) URL.revokeObjectURL(videoUrl.current);videoUrl.current='';
-    setRunning(false);setStarting(false);
+    setRunning(false);setStarting(false);setPreview(false);
   };
   useEffect(()=>{
     request<{opencv_version:string}>('/capabilities').then(setCapability).catch(()=>setError('Vision service is offline. Start the Python backend, then reload this page.'));
     const target=canvas.current?.getContext('2d');if(target) drawDemo(target,'squat',0);
     return ()=>{
       generation.current++; if(timer.current)clearTimeout(timer.current);
+      captureRequest.current?.abort();
       stream.current?.getTracks().forEach(track=>track.stop());worker.current?.terminate();
       if(videoUrl.current)URL.revokeObjectURL(videoUrl.current);
       if(session.current)fetch(API+'/sessions/'+session.current,{method:'DELETE',keepalive:true}).catch(()=>{});
@@ -84,16 +99,21 @@ export default function FitnessStudio() {
     document.addEventListener('visibilitychange',hide);
     return ()=>document.removeEventListener('visibilitychange',hide);
   },[]);
-  const workerCall=(message:unknown, transfer:Transferable[]=[])=>new Promise<{landmarks:FitnessLandmark[];people?:number}>((resolve,reject)=>{
+  const workerCall=(message:unknown, signal:AbortSignal, transfer:Transferable[]=[])=>new Promise<{landmarks:FitnessLandmark[];people?:number}>((resolve,reject)=>{
     const instance=worker.current;
     if(!instance)return reject(new Error('Pose worker is not available.'));
-    const timeout=setTimeout(()=>reject(new Error('Pose processing timed out. Stop and restart.')),25000);
-    instance.onmessage=({data})=>{clearTimeout(timeout);if(data.error)reject(new Error(data.error));else resolve(data);};
-    instance.onerror=()=>{clearTimeout(timeout);reject(new Error('Pose worker could not load. Run npm run prepare:pose.'));};
+    if(signal.aborted)return reject(signal.reason);
+    const cleanup=()=>{clearTimeout(timeout);signal.removeEventListener('abort',abort);instance.onmessage=null;instance.onerror=null;};
+    const abort=()=>{cleanup();reject(signal.reason);};
+    const timeout=setTimeout(()=>{cleanup();reject(new Error('Pose processing timed out. Stop and restart.'));},25000);
+    signal.addEventListener('abort',abort,{once:true});
+    instance.onmessage=({data})=>{cleanup();if(data.error)reject(new Error(data.error));else resolve(data);};
+    instance.onerror=()=>{cleanup();reject(new Error('Pose worker could not load. Run npm run prepare:pose.'));};
     instance.postMessage(message,transfer);
   });
-  const start=async(nextSource:Source, file?:File, body25?:number[])=>{
+  const start=async(nextSource:Source, file?:File)=>{
     stop();const run=++generation.current;
+    const controller=new AbortController();captureRequest.current=controller;
     setStarting(true);setChart([]);setError('');setPlan(null);setApproved(false);setResult(null);lastResult.current=null;pain.current=false;setSource(nextSource);
     try {
       if(nextSource!=='synthetic'&&!consent)throw new Error('Confirm frame processing consent before using your camera or video.');
@@ -104,71 +124,105 @@ export default function FitnessStudio() {
       if(nextSource==='camera'||nextSource==='video') {
         if(!video.current)throw new Error('Video surface is unavailable.');
         if(nextSource==='camera') {
-          const captured=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480}},audio:false});
+          const captured=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:30,max:30}},audio:false});
           if(run!==generation.current){captured.getTracks().forEach(track=>track.stop());return;}
           stream.current=captured;video.current.srcObject=captured;
         } else {videoUrl.current=URL.createObjectURL(file!);video.current.src=videoUrl.current;}
-        // Keep the source paused until model initialization is complete.
+        // Show live camera playback immediately; uploaded videos wait for the model
+        // so their first movement is still analyzed.
         await new Promise<void>((resolve,reject)=>{
           if(video.current!.readyState>=2)return resolve();
           video.current!.onloadeddata=()=>resolve();video.current!.onerror=()=>reject(new Error('This video format is unsupported by your browser. Try MP4 or WebM.'));
           setTimeout(()=>reject(new Error('Video did not load. Try another file.')),15000);
         });
         if(run!==generation.current)return;
+        const media=video.current;
+        const scale=Math.min(640/media.videoWidth,480/media.videoHeight,1);
+        canvas.current!.width=Math.max(32,Math.round(media.videoWidth*scale));
+        canvas.current!.height=Math.max(32,Math.round(media.videoHeight*scale));
+        if(nextSource==='camera'){await media.play();if(run!==generation.current)return;setPreview(true);}
         worker.current=new Worker(new URL('./fitness-pose.worker.ts',import.meta.url),{type:'module'});
         const base=new URL(import.meta.env.BASE_URL,location.origin);
-        await workerCall({type:'init',wasm:new URL('pose/wasm',base).href,model:new URL('pose/pose_landmarker_lite.task',base).href});
+        await workerCall({type:'init',wasm:new URL('pose/wasm',base).href,model:new URL('pose/pose_landmarker_lite.task',base).href},controller.signal);
         if(run!==generation.current)return;
-        await video.current.play();
+        if(nextSource==='video'){await media.play();if(run!==generation.current)return;setPreview(true);}
       }
       if(run!==generation.current)return;
       setStarting(false);setRunning(true);
-      let frame=0,lastVideoTime=-1;
+      let frame=0,lastVideoTime=-1,nextSubmission=0,submissionInterval=200,submitting=false;
       const started=performance.now();
+      // The visible video is composited by the browser at its native frame rate.
+      // Pose detection and one bounded backend request run independently of it.
+      const sample=document.createElement('canvas');
+      const sampleContext=sample.getContext('2d')!;
+      const fail=(cause:unknown)=>{if(run===generation.current){setError(cause instanceof Error?cause.message:String(cause));stop();}};
+      const submit=async(surface:HTMLCanvasElement,landmarks:FitnessLandmark[],timestamp:number)=>{
+        submitting=true;
+        const submittedAt=performance.now();
+        try{
+          const image=await frameImage(surface);
+          if(run!==generation.current)return;
+          const response=await request<Result>('/sessions/'+created.session_id+'/frames',{
+            image,landmarks,timestamp_ms:timestamp,pain:pain.current,
+          },'POST',controller.signal);
+          if(run!==generation.current)return;
+          submissionInterval=Math.max(200,response.next_capture_ms);
+          // Allow recovery time after a slow request as well as spacing captures;
+          // the server's rate limit is measured from when it receives the frame.
+          nextSubmission=Math.max(submittedAt+submissionInterval,performance.now()+100);
+          setResult(response);lastResult.current=response;
+          setChart(old=>[...old.slice(-79),{time:performance.now()-started,angle:['coach','correct_form','count_rep','review_rep'].includes(response.action)?response.metrics.angle??null:null}]);
+          if(response.reps>0 && (nextSource==='camera'||nextSource==='video')){
+            try {const records=readDaily().filter(x=>x.id!==created.session_id);records.push({id:created.session_id,date:new Date().toLocaleDateString('en-CA'),exercise:response.exercise,source:nextSource,reps:response.reps,review:response.review_reps,duration:Math.round((performance.now()-started)/1000)});localStorage.setItem(dailyKey,JSON.stringify(records.slice(-100)));}
+            catch { /* Recording can be unavailable in private browsing. Capture remains usable. */ }
+          }
+          if(response.stopped)stop();
+        }catch(cause){fail(cause);}
+        finally{submitting=false;}
+      };
       const tick=async()=>{
         if(run!==generation.current)return;
+        const tickStarted=performance.now();
         try {
           const surface=canvas.current!, context=surface.getContext('2d')!;
-          let landmarks:FitnessLandmark[]=[], imported:number[]|undefined;
+          let landmarks:FitnessLandmark[]=[];
           let mediaTime=0;
-          if(nextSource==='synthetic') {surface.width=640;surface.height=480;landmarks=drawDemo(context,exercise==='auto'?'squat':exercise,frame++);}
+          if(nextSource==='synthetic') {
+            if(surface.width!==640||surface.height!==480){surface.width=640;surface.height=480;}
+            landmarks=drawDemo(context,exercise==='auto'?'squat':exercise,frame++);
+            await submit(surface,landmarks,(frame-1)*250);
+          }
           else {
             const media=video.current!;
             if(media.ended){stop();return;}
             if(media.currentTime===lastVideoTime){timer.current=setTimeout(tick,100);return;}
             lastVideoTime=media.currentTime;mediaTime=media.currentTime*1000;
             const scale=Math.min(640/media.videoWidth,480/media.videoHeight,1);
-            surface.width=Math.max(32,Math.round(media.videoWidth*scale));surface.height=Math.max(32,Math.round(media.videoHeight*scale));
-            context.drawImage(media,0,0,surface.width,surface.height);
-            const bitmap=await createImageBitmap(surface);
-            const detection=await workerCall({type:'frame',bitmap,timestamp:performance.now()},[bitmap]);
+            const width=Math.max(32,Math.round(media.videoWidth*scale)),height=Math.max(32,Math.round(media.videoHeight*scale));
+            if(sample.width!==width||sample.height!==height){sample.width=width;sample.height=height;surface.width=width;surface.height=height;}
+            sampleContext.drawImage(media,0,0,width,height);
+            const timestamp=nextSource==='video'?mediaTime:performance.now()-started;
+            const bitmap=await createImageBitmap(sample);
+            if(run!==generation.current){bitmap.close();return;}
+            const detection=await workerCall({type:'frame',bitmap,timestamp:performance.now()},controller.signal,[bitmap]);
             if(run!==generation.current)return;
             landmarks=detection.landmarks;
-            if(nextSource==='body25')imported=body25;
-          }
-          // Submit the unannotated frame; skeleton lines must not inflate sharpness.
-          const image=surface.toDataURL('image/jpeg',.75);
-          if(nextSource!=='synthetic')drawSkeleton(context,landmarks,surface.width,surface.height);
-          const response=await request<Result>('/sessions/'+session.current+'/frames',{
-            image,landmarks:imported?[]:landmarks,...(imported?{body25:imported}:{}),timestamp_ms:nextSource==='synthetic'?(frame-1)*250:nextSource==='video'?mediaTime:performance.now()-started,pain:pain.current,
-          });
-          if(run!==generation.current)return;
-          if(nextSource!=='synthetic'&&landmarks.length){
-            context.font='bold 13px sans-serif';context.fillStyle='#fff7c4';
-            for(const [name,index] of Object.entries({left_elbow:13,right_elbow:14,left_knee:25,right_knee:26,left_hip:23,right_hip:24})){
-              const value=response.metrics.angles?.[name], point=landmarks[index];
-              if(value!=null&&point?.visibility>=.6&&name.startsWith(response.metrics.side||'left'))context.fillText(`${Math.round(value)}°`,point.x*surface.width+8,point.y*surface.height-8);
+            // The overlay contains only landmarks, never a stale camera snapshot.
+            context.clearRect(0,0,width,height);drawSkeleton(context,landmarks,width,height);
+            const response=lastResult.current;
+            if(response&&landmarks.length){
+              context.font='bold 13px sans-serif';context.fillStyle='#fff7c4';
+              for(const [name,index] of Object.entries({left_elbow:13,right_elbow:14,left_knee:25,right_knee:26,left_hip:23,right_hip:24})){
+                const value=response.metrics.angles?.[name], point=landmarks[index];
+                if(value!=null&&point?.visibility>=.6&&name.startsWith(response.metrics.side||'left'))context.fillText(`${Math.round(value)}°`,point.x*surface.width+8,point.y*surface.height-8);
+              }
             }
+            // Skip analysis samples while the backend is busy; never queue old frames.
+            // Keep this unannotated so skeleton lines cannot inflate sharpness.
+            if(!submitting&&performance.now()>=nextSubmission)void submit(sample,landmarks,timestamp);
           }
-          setResult(response);lastResult.current=response;
-          setChart(old=>[...old.slice(-79),{time:performance.now()-started,angle:['coach','correct_form','count_rep','review_rep'].includes(response.action)?response.metrics.angle??null:null}]);
-          if(response.reps>0 && (nextSource==='camera'||nextSource==='video')){
-            try {const records=readDaily().filter(x=>x.id!==session.current);records.push({id:session.current,date:new Date().toLocaleDateString('en-CA'),exercise:response.exercise,source:nextSource,reps:response.reps,review:response.review_reps,duration:Math.round((performance.now()-started)/1000)});localStorage.setItem(dailyKey,JSON.stringify(records.slice(-100)));}
-            catch { /* Recording can be unavailable in private browsing. Capture remains usable. */ }
-          }
-          if(response.stopped){stop();return;}
-          timer.current=setTimeout(tick,Math.max(200,response.next_capture_ms));
-        }catch(cause){if(run===generation.current){setError(cause instanceof Error?cause.message:String(cause));stop();}}
+          if(run===generation.current)timer.current=setTimeout(tick,nextSource==='synthetic'?Math.max(0,nextSubmission-performance.now()):Math.max(0,100-(performance.now()-tickStarted)));
+        }catch(cause){fail(cause);}
       };
       await tick();
     }catch(cause){if(run===generation.current){setError(cause instanceof Error?cause.message:String(cause));stop();}}
@@ -227,7 +281,7 @@ export default function FitnessStudio() {
         <div className="training-pair">
           <section className="fit-camera-card" aria-label="Movement capture">
             <div className="fit-card-top"><span><span className="fit-dot online"/>{active?'LIVE MOVEMENT':'YOUR CAMERA'}</span><span>{source==='synthetic'?'SYNTHETIC DEMO':source.toUpperCase()}</span></div>
-            <div className="fit-stage"><canvas ref={canvas} width={640} height={480} aria-label="Exercise video and pose skeleton"/><video ref={video} muted playsInline className="fit-source-video"/><span className="fit-stage-label">{exercise==='auto'&&!result?.recognition?.locked&&source!=='synthetic'?'Recognizing movement…':selected.name}</span>{starting&&<div className="fit-loading" role="status">Loading your camera and pose model…</div>}</div>
+            <div className={`fit-stage${preview?' fit-stage-live':''}`}><video ref={video} muted playsInline className="fit-source-video" aria-label="Live exercise video"/><canvas ref={canvas} width={640} height={480} aria-label="Exercise video and pose skeleton"/><span className="fit-stage-label">{exercise==='auto'&&!result?.recognition?.locked&&source!=='synthetic'?'Recognizing movement…':selected.name}</span>{starting&&<div className="fit-loading" role="status">Loading your camera and pose model…</div>}</div>
             <div className="fit-metrics"><div><strong>{result?.reps??'—'}</strong><span>Observed reps</span></div><div><strong>{result?.accepted_reps??'—'}</strong><span>Without form cues</span></div><div><strong>{result?.metrics.angle==null?'—':`${result.metrics.angle}°`}</strong><span>{selected.joint} angle</span></div><div><strong>{result?.phase.replaceAll('_',' ')??'ready'}</strong><span>Movement phase</span></div></div>
             <div className="fit-live-cue" role="status"><Activity size={18}/><div><strong>{result?result.action.replaceAll('_',' '):'Position yourself side-on.'}</strong><p>{result?.message??'Keep one person and the whole body visible. Begin slowly, in a comfortable range.'}</p></div></div>
             <div className="fit-capture-controls"><button className="fit-primary" onClick={()=>active?stop():start('camera')} disabled={!capability||(!active&&!consent)}>{active?<Square size={16}/>:<Camera size={16}/>} {active?'Stop session':'Use camera'}</button><label className={`fit-file-button ${active||!consent?'disabled':''}`}><FileVideo size={16}/>Open video<input aria-label="Open exercise video" type="file" accept="video/mp4,video/webm,video/quicktime" disabled={active||!consent||!capability} onChange={e=>{const file=e.target.files?.[0];if(file)void start('video',file);e.target.value='';}}/></label><button onClick={()=>start('synthetic')} disabled={active||!capability}><Play size={16}/>Try synthetic demo</button></div>

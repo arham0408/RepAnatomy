@@ -78,6 +78,58 @@ test('pain stops capture and blocks the plan, clinical review also gates a draft
   await expect(page.locator('.fit-plan-result')).toContainText('A person should help with this.');
   await expect(page.locator('.fit-day')).toHaveCount(0);
 });
+
+test('live camera and pose updates continue while model loading or backend analysis is delayed',async({page,context})=>{
+  await context.grantPermissions(['camera']);
+  await page.addInitScript(()=>{
+    window.__poseFrames=0;
+    const post=Worker.prototype.postMessage;
+    Worker.prototype.postMessage=function(message,...args){
+      if(message.type==='frame')window.__poseFrames++;
+      return post.call(this,message,...args);
+    };
+  });
+  let releaseModel,releaseFrame,requests=0;
+  const modelGate=new Promise(resolve=>{releaseModel=resolve;});
+  const frameGate=new Promise(resolve=>{releaseFrame=resolve;});
+  await page.route('**/pose/pose_landmarker_lite.task',async route=>{await modelGate;await route.continue();});
+  await page.route('**/api/fitness/sessions/*/frames',async route=>{requests++;if(requests===1)await frameGate;await route.continue();});
+  try{
+    await ready(page);
+    await page.locator('.fit-camera-card .fit-consent input').check();
+    await page.getByRole('button',{name:'Use camera',exact:true}).click();
+    const video=page.getByLabel('Live exercise video',{exact:true});
+    await expect(video).toBeVisible();
+    // Camera playback must start even while the pose model cannot finish loading.
+    await expect.poll(()=>video.evaluate(v=>v.currentTime)).toBeGreaterThan(.3);
+    await expect(page.locator('.fit-loading')).toBeVisible();
+    releaseModel();
+    await expect.poll(()=>requests,{timeout:60000}).toBe(1);
+    const measurement=await video.evaluate(v=>new Promise(resolve=>{
+      let frames=0;
+      const start=performance.now(),poses=window.__poseFrames;
+      let callback;
+      const count=()=>{frames++;callback=v.requestVideoFrameCallback(count);};
+      callback=v.requestVideoFrameCallback(count);
+      setTimeout(()=>{v.cancelVideoFrameCallback(callback);resolve({frames,elapsed:performance.now()-start,poses:window.__poseFrames-poses});},1800);
+    }));
+    console.log('Camera under stalled backend:',JSON.stringify(measurement));
+    expect(measurement.frames).toBeGreaterThan(10);
+    expect(measurement.poses).toBeGreaterThan(1);
+    expect(requests).toBe(1); // One request in flight, no stale-frame queue.
+    expect(await page.locator('.fit-stage canvas').evaluate(c=>c.getContext('2d').getImageData(0,0,1,1).data[3])).toBe(0);
+    releaseFrame();
+    await expect(page.locator('.fit-live-cue strong')).toHaveText('reframe');
+    await page.getByRole('button',{name:'Stop session',exact:true}).click();
+    await expect(page.locator('.fit-stage')).not.toHaveClass(/fit-stage-live/);
+    expect(await video.evaluate(v=>v.srcObject)).toBe(null);
+    // Restart must not inherit pending work or responses from the previous run.
+    await page.getByRole('button',{name:'Use camera',exact:true}).click();
+    await expect(page.locator('.fit-live-cue strong')).toHaveText('reframe',{timeout:60000});
+    await page.getByRole('button',{name:'Stop session',exact:true}).click();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+  }finally{releaseModel();releaseFrame();}
+});
 test('mobile layouts keep controls reachable and fit within the viewport',async({page})=>{
   await page.setViewportSize({width:390,height:844});await ready(page);
   await demo(page);
