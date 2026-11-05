@@ -1,0 +1,52 @@
+name: Validate AWS container
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['Dockerfile', '.dockerignore', 'backend/**', 'deploy/**', 'scripts/**', 'app/**', 'components/**', 'lib/**', 'web/**', 'data/fitness/**', 'public/**', 'package*.json', '.github/workflows/container.yml']
+permissions:
+  contents: read
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install pinned backend for the HTTP check
+        run: python -m pip install -r backend/requirements.lock.txt
+      - name: Validate deployment orchestration without AWS access
+        shell: pwsh
+        run: ./scripts/test-deploy-aws.ps1
+      - name: Validate CloudFormation schemas in an isolated environment
+        run: |
+          python -m venv /tmp/cfn-tools
+          /tmp/cfn-tools/bin/pip install cfn-lint==1.45.0
+          /tmp/cfn-tools/bin/cfn-lint deploy/aws-express.yaml deploy/aws-fargate.yaml
+      - name: Build Linux image
+        run: docker build --platform linux/amd64 -t repanatomy:check .
+      - name: Start the production container
+        run: docker run -d --name repanatomy -p 127.0.0.1:8000:8000 repanatomy:check
+      - name: Wait for health
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/healthz > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          docker logs repanatomy
+          exit 1
+      - name: Exercise OpenCV, quality decisions, stop, assets and MCP
+        run: python scripts/smoke-deployment.py --url http://127.0.0.1:8000 --allow-local-http --output outputs/container-workload.json
+      - name: Upload synthetic container evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: container-workload
+          path: outputs/container-workload.json
+      - name: Container diagnostics
+        if: failure()
+        run: docker logs repanatomy
+      - name: Stop test container
+        if: always()
+        run: docker rm -f repanatomy

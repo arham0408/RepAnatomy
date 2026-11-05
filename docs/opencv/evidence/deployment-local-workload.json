@@ -1,0 +1,82 @@
+{
+  "recorded_at_utc": "2026-11-04T20:27:39.066935+00:00",
+  "endpoint": "http://127.0.0.1:8000",
+  "status": "passed",
+  "input_source": "synthetic",
+  "checks": [
+    "same_origin_web_and_health",
+    "opencv_5_runtime",
+    "pinned_pose_model_and_wasm",
+    "exact_origin_guard",
+    "synthetic_cycle_one_rep",
+    "opencv_quality_changes_capture_action",
+    "human_stop_latched",
+    "temporary_session_deleted",
+    "same_origin_mcp"
+  ],
+  "runtime": {
+    "opencv_version": "5.0.0",
+    "opencv5": true,
+    "pose_provider": "browser_mediapipe_or_body25",
+    "operations": [
+      "JPEG decode",
+      "grayscale",
+      "Laplacian sharpness",
+      "exposure",
+      "affine landmark projection",
+      "pyramidal Lucas-Kanade optical flow"
+    ],
+    "retention_seconds": 1800,
+    "aws_execution_verified": false,
+    "deployment_environment": "local_or_unverified",
+    "cool_enabled": false
+  },
+  "observations": [
+    {
+      "input": "synthetic_complete_cycle",
+      "action": "count_rep",
+      "reps": 1
+    },
+    {
+      "input": "synthetic_dark_frame",
+      "action": "adjust_lighting",
+      "quality": {
+        "sharpness": 0.0,
+        "exposure": 5.0,
+        "tracking_error_px": null
+      },
+      "next_capture_ms": 500
+    }
+  ],
+  "trace": [
+    {
+      "step": 1,
+      "timestamp_ms": 0.0,
+      "tool": "opencv.frame_analysis",
+      "decision": "coach",
+      "reason": "Continue with a controlled, comfortable movement."
+    },
+    {
+      "step": 7,
+      "timestamp_ms": 1500.0,
+      "tool": "opencv.frame_analysis",
+      "decision": "count_rep",
+      "reason": "Complete range cycle observed. This is not a certification of safe technique."
+    },
+    {
+      "step": 8,
+      "timestamp_ms": 1750.0,
+      "tool": "opencv.frame_analysis",
+      "decision": "adjust_lighting",
+      "reason": "Improve lighting before form assessment can resume."
+    },
+    {
+      "step": 8,
+      "timestamp_ms": 1750.0,
+      "tool": "opencv.frame_analysis",
+      "decision": "stop",
+      "reason": "User reported pain or dizziness. Human review is required."
+    }
+  ],
+  "limits": "Synthetic HTTP engineering check only; not human accuracy, camera verification or independent proof of AWS hosting. Pair with AWS stack/task evidence."
+}

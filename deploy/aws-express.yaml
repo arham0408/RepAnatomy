@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: RepAnatomy OpenCV 5 on ECS Express Mode (Fargate), managed HTTPS and bounded demo capacity.
+Parameters:
+  ImageUri:
+    Type: String
+    Description: Private ECR image pinned to a digest, built for linux/amd64.
+    AllowedPattern: '.+@sha256:[a-f0-9]{64}'
+  PublicHostname:
+    Type: String
+    Default: ''
+    Description: Filled with the exact generated ECS hostname by deploy-aws.ps1 after initial provisioning.
+    AllowedPattern: '^$|[a-zA-Z0-9.-]+'
+Conditions:
+  HostConfigured: !Not [!Equals [!Ref PublicHostname, '']]
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties: {CidrBlock: 10.43.0.0/16, EnableDnsSupport: true, EnableDnsHostnames: true}
+  Gateway:
+    Type: AWS::EC2::InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: {VpcId: !Ref Vpc, InternetGatewayId: !Ref Gateway}
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.43.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.43.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+  Routes:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref Vpc}
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties: {RouteTableId: !Ref Routes, DestinationCidrBlock: 0.0.0.0/0, GatewayId: !Ref Gateway}
+  AssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref SubnetA, RouteTableId: !Ref Routes}
+  AssociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref SubnetB, RouteTableId: !Ref Routes}
+  Cluster:
+    Type: AWS::ECS::Cluster
+  Logs:
+    Type: AWS::Logs::LogGroup
+    Properties: {RetentionInDays: 7}
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - {Effect: Allow, Principal: {Service: ecs-tasks.amazonaws.com}, Action: 'sts:AssumeRole'}
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+  InfrastructureRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - {Effect: Allow, Principal: {Service: ecs.amazonaws.com}, Action: 'sts:AssumeRole'}
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices'
+  Service:
+    Type: AWS::ECS::ExpressGatewayService
+    DependsOn: [InternetRoute, AssociationA, AssociationB]
+    Properties:
+      Cluster: !Ref Cluster
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      InfrastructureRoleArn: !GetAtt InfrastructureRole.Arn
+      Cpu: '1'
+      Memory: '2'
+      HealthCheckPath: /healthz
+      NetworkConfiguration:
+        Subnets: [!Ref SubnetA, !Ref SubnetB]
+      # All application sessions are process-local. Do not increase these limits.
+      ScalingTarget:
+        MinTaskCount: 1
+        MaxTaskCount: 1
+        AutoScalingMetric: AVERAGE_CPU
+        AutoScalingTargetValue: 60
+      PrimaryContainer:
+        Image: !Ref ImageUri
+        ContainerPort: 8000
+        AwsLogsConfiguration:
+          LogGroup: !Ref Logs
+          LogStreamPrefix: vision
+        Environment:
+          - {Name: REPANATOMY_SERVE_WEB, Value: '1'}
+          - {Name: REPANATOMY_ALLOWED_HOSTS, Value: !Ref PublicHostname}
+          - Name: REPANATOMY_ALLOWED_ORIGINS
+            Value: !If [HostConfigured, !Sub 'https://${PublicHostname}', '']
+Outputs:
+  Endpoint:
+    Value: !GetAtt Service.Endpoint
+  ServiceArn:
+    Value: !GetAtt Service.ServiceArn
+  ClusterArn:
+    Value: !GetAtt Cluster.Arn
+  LogGroup:
+    Value: !Ref Logs

@@ -93,7 +93,9 @@ Browser checks use their own backend and frontend ports. The vision tests cover 
 
 ## Build and AWS delivery
 
-`npm run build` produces the web bundle and verifies its PWA manifest, branding, icons and model integrity. Production mode serves the web app, REST API and MCP endpoint from one Python process. [AWS deployment instructions](deploy/README.md), [Dockerfile](Dockerfile), and [CloudFormation template](deploy/aws-fargate.yaml) are included for a single ECS Fargate task behind HTTPS. No resources were deployed and nothing was pushed as part of the local preparation.
+`npm run build` produces the web bundle and verifies its PWA manifest, branding, icons and model integrity. Production mode serves the web app, REST API and MCP endpoint from one Python process. The [AWS setup guide](deploy/README.md) and [deployment helper](deploy/deploy-aws.ps1) prepare ECS Express Mode on Fargate with a generated HTTPS URL, an immutable ECR image, exact host/origin configuration and CloudWatch logs. No custom domain or Streamlit rewrite is required. A [custom-domain Fargate template](deploy/aws-fargate.yaml) is also available. No AWS resources have been deployed. Source publication does not establish AWS execution.
+
+The competition requires OpenCV 5 plus meaningful AWS execution; Streamlit and serverless are optional. Fargate provides serverless container compute while preserving the existing React/3D experience. After deployment, run `python scripts/smoke-deployment.py --url https://YOUR_ENDPOINT` to verify the remote synthetic workload and save its trace. Local checks and a prepared template do not establish AWS execution. The public deadline was October 26, 2026; confirm organizer permission/edit access for changes after that date.
 
 The prepared architecture runs the OpenCV workload on AWS after deployment. COOL/Graviton acceleration is not implemented or claimed. The controller demonstrates the Agentic Vision perception–decision–action pattern; award qualification remains subject to the organizers' assessment.
 

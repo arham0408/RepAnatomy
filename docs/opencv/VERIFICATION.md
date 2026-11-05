@@ -54,3 +54,18 @@ The offline test's older “About the atlas & sources” selector was updated to
 - Chromium is the verified browser target. Other browser engines, physical camera devices and mobile hardware require separate validation.
 
 Use [SUBMISSION_CHECKLIST.md](SUBMISSION_CHECKLIST.md) to distinguish prepared material from remaining competition evidence.
+
+## Deployment preparation — November 5, 2026 IST
+
+Added ECS Express Mode CloudFormation, a PowerShell 7 build/publish/deploy helper, an endpoint workload checker, a Linux-container CI workflow and a new AWS account/setup guide. The previous custom-domain Fargate instructions remain in `deploy/FARGATE.md`. No runtime/UI rewrite or Streamlit dependency was needed.
+
+Verified locally:
+
+- `npm ci`, pose preparation, TypeScript, lint, root production build/PWA validation and all **127** Node tests passed.
+- All **39** fitness/movement/MCP backend tests passed with the pinned backend environment; the original production ASGI smoke check passed.
+- All **13** Gym Studio browser tests passed against the built production ASGI server, including actual model/WASM initialization, fake-camera/video lifecycle, controls, mobile layout, anatomy integration, plans and exports. These are engineering tests, not physical-camera or human accuracy validation.
+- `scripts/test-deploy-aws.ps1` passed **six mocked scenarios**: first deployment with two hostname configuration operations, an update preserving its hostname, wrong account, AWS permission error, wrong-region image and unexpected endpoint. No actual AWS commands were invoked by that test.
+- `cfn-lint==1.45.0` accepted both AWS templates against its CloudFormation schemas. This does not validate AWS permissions, quotas or actual provisioning.
+- `scripts/smoke-deployment.py` passed **nine checks** against a local production HTTP server. See [the synthetic local workload record](evidence/deployment-local-workload.json). A separate local ASGI simulation verified an explicitly configured HTTPS hostname/origin, rejected unrelated hosts and allowed the container-IP health probe. Neither check used an AWS endpoint.
+
+Docker Engine and AWS CLI are absent here. The new Linux container workflow has been prepared but not run on GitHub Actions. AWS deployment, live HTTPS/browser validation, real-camera/consented human-clip evaluation and submission video/access remain pending. No AWS cost, latency, reliability or award qualification is claimed.

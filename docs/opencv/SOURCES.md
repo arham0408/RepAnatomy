@@ -23,9 +23,13 @@ The catalog's muscle roles are anatomical expectations, not activation data, and
 - [OpenCV headless package](https://pypi.org/project/opencv-python-headless/) — pinned 5.0.0.93 wheel; actual runtime verified separately.
 - [AWS Fargate networking](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-task-networking.html) — task ENIs, network/security groups and load balancing.
 - [CloudFormation ECS service](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ecs-service.html) — declarative service configuration.
+- [ECS Express Mode deployment](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-getting-started.html) and [CloudFormation resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ecs-expressgatewayservice.html) — managed HTTPS container deployment; exact properties validated against CloudFormation schemas locally.
+- [AWS CLI browser login](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html) — temporary local credentials and identity prerequisites.
 - [Competition overview](https://opencv26.devpost.com/) and [official rules](https://opencv26.devpost.com/rules) — current requirements; see checklist for pending evidence and conflicting displayed time/age text.
 
 ## Supplied reference projects
+
+The supplied [Gymnalyze submission](https://devpost.com/software/gymnalyze-real-time-gymnastics-discipline-identification) and [repository](https://github.com/krinachauhan006/Gymnalyze) describe a Streamlit application hosted on EC2. This informed the hosting comparison only. Its code/models were not copied. The competition overview does not require Streamlit or serverless hosting.
 
 The supplied references were reviewed to understand their capabilities and integration formats. [BODY_25 output documentation](https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/02_output.md) informed the interoperable keypoint mapping. The external pose executable is not installed or redistributed.
 
